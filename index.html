@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>家庭倉儲紀錄系統</title>
+    <title>居家倉儲紀錄系統</title>
 	
     <script src="https://cdn.tailwindcss.com"></script>
 	<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -22,14 +22,14 @@
 <body class="bg-slate-900 min-h-screen text-slate-100 font-sans select-none">
     
     <!-- 側邊欄遮罩 (手機版) -->
-    <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/60 z-30 hidden md:hidden"></div>
+    <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/60 z-30 hidden min-[840px]:hidden"></div>
 
     <div class="flex h-screen overflow-hidden">
 
         <!-- 左側導覽列 -->
-        <aside id="sidebar" class="w-64 bg-slate-800 border-r border-slate-700 flex-shrink-0 flex flex-col fixed inset-y-0 left-0 z-40 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out">
+        <aside id="sidebar" class="w-64 bg-slate-800 border-r border-slate-700 flex-shrink-0 flex flex-col fixed inset-y-0 left-0 z-40 transform -translate-x-full min-[840px]:relative min-[840px]:translate-x-0 transition-transform duration-300 ease-in-out">
             <div class="p-3">
-                <h1 class="text-xl font-bold text-blue-400 mb-6">🏠 居家倉儲</h1>
+                <h1 class="text-xl font-bold text-blue-400 mb-6">🏠 朱家倉儲</h1>
                 
                 <div class="mb-6">
                     <label class="text-xs text-slate-500 mb-2 block">切換住家</label>
@@ -61,9 +61,9 @@
         <main class="flex-1 overflow-y-auto flex flex-col">
             <!-- 頂部導覽列 -->
             <header class="bg-slate-800/50 backdrop-blur-md sticky top-0 z-10 border-b border-slate-700">
-                <div class="px-4 md:px-8 py-3 flex justify-between items-center">
+                <div class="px-4 min-[840px]:px-8 py-3 flex justify-between items-center">
                     <div class="flex items-center">
-                        <button onclick="toggleSidebar()" class="md:hidden mr-3 text-slate-300 hover:text-white focus:outline-none">
+                        <button onclick="toggleSidebar()" class="min-[840px]:hidden mr-3 text-slate-300 hover:text-white focus:outline-none">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                             </svg>
@@ -76,25 +76,25 @@
                 </div>
             </header>
 
-            <div class="p-4 flex-1">
+            <div class="p-3 flex-1">
                 <!-- 狀態摘要 -->
-                <section class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                    <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 shadow-lg">
+                <section class="grid grid-cols-1 min-[840px]:grid-cols-3 gap-3 mb-4">
+                    <div class="bg-slate-800 py-1 px-3 rounded-2xl border border-slate-700 shadow-lg">
                         <p class="text-slate-400 text-sm">總庫存品項</p>
                         <h2 id="totalItemsDisplay" class="text-3xl font-bold mt-1 text-blue-400">0 <span class="text-base font-normal text-slate-300">件</span></h2>
                     </div>
-                    <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 shadow-lg">
+                    <div class="bg-slate-800 py-1 px-3 rounded-2xl border border-slate-700 shadow-lg">
                         <p class="text-slate-400 text-sm">即將到期 (30天內)</p>
                         <h2 id="expiringDisplay" class="text-3xl font-bold text-orange-400 mt-1">0 <span class="text-base font-normal text-slate-300">件</span></h2>
                     </div>
-                    <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 shadow-lg">
+                    <div class="bg-slate-800 py-1 px-3 rounded-2xl border border-slate-700 shadow-lg">
                         <p class="text-slate-400 text-sm">低庫存警示</p>
                         <h2 id="lowStockDisplay" class="text-3xl font-bold text-red-400 mt-1">0 <span class="text-base font-normal text-slate-300">件</span></h2>
                     </div>
                 </section>
 
                 <!-- 搜尋與類別篩選 -->
-                <section class="flex flex-col md:flex-row gap-4 mb-4">
+                <section class="flex flex-col min-[840px]:flex-row gap-3 mb-4">
                     <div class="flex-1 relative">
                         <input id="searchInput" type="text" oninput="triggerFilter()" placeholder="搜尋物品名稱..." 
                             class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-blue-500 text-slate-100 placeholder-slate-500">
@@ -106,7 +106,7 @@
                 </section>
 
                 <!-- 庫存明細列表 -->
-                <section class="bg-slate-800 p-4 rounded-2xl border border-slate-700 shadow-lg">
+                <section class="bg-slate-800 py-1 px-3 rounded-2xl border border-slate-700 shadow-lg">
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="text-lg font-bold flex items-center">
                             庫存明細
@@ -141,7 +141,7 @@
     </div>
 
     <!-- ==================== 浮動視窗 (Modal) 系統 ==================== -->
-    <div id="modalOverlay" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div id="modalOverlay" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 hidden">
         <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl transition-all scale-95" id="modalContainer">
             <!-- Modal Header -->
             <div class="px-6 py-4 border-b border-slate-700 flex justify-between items-center bg-slate-800/80">
@@ -311,8 +311,8 @@
             
 			state.categories.forEach(cat => {
 				const opt = document.createElement('option');
-				opt.value = cat.ID; 
-				opt.textContent = cat.Category_Name; 
+				opt.value = cat.id; 
+				opt.textContent = cat.cat_name; 
 				dropdown.appendChild(opt);
 			});
             dropdown.value = currentValue;
@@ -399,10 +399,10 @@
                     const expDate = new Date(item.expiry);
                     const daysLeft = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));
                     if (daysLeft < 0) {
-                        expiryDisplay = `${item.expiry} (已過期)`;
+                        expiryDisplay = `${item.expiry}`;
                         expiryClass = "text-red-500 font-semibold text-sm";
                     } else if (daysLeft <= 30) {
-                        expiryDisplay = `${item.expiry} (${daysLeft}天)`;
+                        expiryDisplay = `${item.expiry}`;
                         expiryClass = "text-orange-400 font-semibold text-sm";
                     } else {
                         expiryClass = "text-emerald-400 text-sm";
@@ -519,7 +519,7 @@
             const currentLocs = state.locations.filter(l => l.home === state.currentHome && l.name !== 'null');
             const currentRooms = state.rooms[state.currentHome] || [];
             
-            let item = { name: '', category: state.categories[0]?.Category_Name || '未分類', quantity: 1, expiry: '' };
+            let item = { name: '', category: state.categories[0]?.cat_name || '未分類', quantity: 1, expiry: '' };
             //let itemRoom = currentRooms.length > 0 ? currentRooms[0] : '';
 			let itemRoom = ""//state.filterValue != "" ? state.filterValue : currentRooms[0];
 			if(currentRooms.length > 0)
@@ -555,7 +555,7 @@
 				}
             }
 
-			const catOptions = state.categories.map(c => `<option value="${c.ID}" ${item.category === c.Category_Name ? 'selected' : ''}>${c.Category_Name}</option>`).join('');
+			const catOptions = state.categories.map(c => `<option value="${c.id}" ${item.category === c.cat_name ? 'selected' : ''}>${c.cat_name}</option>`).join('');
             const roomOptions = currentRooms.map(r => `<option value="${r}" ${itemRoom === r ? 'selected' : ''}>${r}</option>`).join('');
             const validLocs = currentLocs.filter(l => l.room === itemRoom);
             const locOptions = validLocs.map(l => `<option value="${l.name}" ${itemLocName === l.name ? 'selected' : ''}>${l.name}</option>`).join('');
@@ -567,7 +567,7 @@
                         <input type="text" id="formItemName" required value="${item.name}" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500" placeholder="例如：急救藥箱">
                     </div>
                     
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="block text-sm font-medium text-slate-300 mb-1">類別</label>
                             <select id="formItemCategory" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 text-slate-200">
@@ -580,7 +580,7 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="block text-sm font-medium text-slate-300 mb-1">樓層房間</label>
                             <select id="formItemRoom" onchange="updateModalLocationOptions()" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 text-slate-200">
@@ -924,10 +924,10 @@
             editingCatIdx = -1;
 			let listHtml = state.categories.map(cat => `
 				<div class="flex justify-between items-center py-2 border-b border-slate-700 hover:bg-slate-800/50 px-2 rounded transition">
-					<span class="text-sm font-medium text-slate-200">🏷️ ${cat.Category_Name}</span>
+					<span class="text-sm font-medium text-slate-200">🏷️ ${cat.cat_name}</span>
 					<div class="flex space-x-2">
-						<button onclick="editCategory(${cat.ID})" class="text-blue-400 hover:text-blue-300 p-1 text-xs transition">編輯</button>
-						<button onclick="deleteCategory(${cat.ID})" class="text-red-400 hover:text-red-300 p-1 text-xs transition">移除</button>
+						<button onclick="editCategory(${cat.id})" class="text-blue-400 hover:text-blue-300 p-1 text-xs transition">編輯</button>
+						<button onclick="deleteCategory(${cat.id})" class="text-red-400 hover:text-red-300 p-1 text-xs transition">移除</button>
 					</div>
 				</div>
 			`).join('');
@@ -955,10 +955,10 @@
 
         function editCategory(idx) {
             editingCatIdx = idx;
-			const catToEdit = state.categories.find(c => c.ID === idx);
+			const catToEdit = state.categories.find(c => c.id === idx);
 			if (!catToEdit) return;
 
-			document.getElementById('newCatInput').value = catToEdit.Category_Name;
+			document.getElementById('newCatInput').value = catToEdit.cat_name;
 			const btn = document.getElementById('catSubmitBtn');
 			btn.innerText = '儲存';
 			btn.classList.replace('bg-blue-600', 'bg-emerald-600');
@@ -971,14 +971,14 @@
             if (!val) return;
             
             if (editingCatIdx > -1) {
-				const catToUpdate = state.categories.find(c => c.ID === editingCatIdx);
+				const catToUpdate = state.categories.find(c => c.id === editingCatIdx);
 				
 				if (catToUpdate) {
-					const oldName = catToUpdate.Category_Name;
-					const isDuplicate = state.categories.some(c => c.Category_Name === val && c.ID !== editingCatIdx);
+					const oldName = catToUpdate.cat_name;
+					const isDuplicate = state.categories.some(c => c.cat_name === val && c.id !== editingCatIdx);
 					if (val !== oldName && !isDuplicate) {
 						// 更新本地狀態
-						catToUpdate.Category_Name = val;
+						catToUpdate.cat_name = val;
 						state.items.forEach(item => {
 							if (item.category === oldName) item.category = val;
 						});
@@ -988,13 +988,13 @@
 					}
 				}
             } else {
-				if (state.categories.some(c => c.Category_Name === val)) {
+				if (state.categories.some(c => c.cat_name === val)) {
 					alert("這個類別名稱已經存在了！");
 					input.value = ''; 
 					return; 
 				}
 				
-                const newCat = { ID: Date.now(), Category_Name: val };
+                const newCat = { id: Date.now(), cat_name: val };
 				state.categories.push(newCat);
 				await addCategorieToSupabase(newCat);
             }
@@ -1003,7 +1003,7 @@
         }
 
         async function deleteCategory(idx) {
-			state.categories = state.categories.filter(c => c.ID !== idx);
+			state.categories = state.categories.filter(c => c.id !== idx);
 			await deleteCategorieFromSupabase(idx)
             renderAll();
             openManageCategoriesModal();
@@ -1015,13 +1015,13 @@
 		}
 		
 		async function deleteCategorieFromSupabase(itemId) {
-			const { error } = await db.from('StoreHouse_Categories').delete().eq('ID', itemId); 
+			const { error } = await db.from('StoreHouse_Categories').delete().eq('id', itemId); 
 			if (error) console.error("刪除類別失敗:", error);
 		}
 		
 		async function updateCategoryInSupabase(id, oldName, newName) {
 			// 同步更新 StoreHouse_Categories 與 StoreHouse_Items
-			const { error1 } = await db.from('StoreHouse_Categories').update({ Category_Name: newName }).eq('ID', id);
+			const { error1 } = await db.from('StoreHouse_Categories').update({ cat_name: newName }).eq('id', id);
 			const { error2 } = await db.from('StoreHouse_Items').update({ category: newName }).eq('category', oldName);
 			if (error1 || error2) console.error("更新類別名稱及物品連動失敗:", error1, error2);
 		}
