@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>家庭倉儲紀錄系統</title>
+	
+    <script src="https://cdn.tailwindcss.com"></script>
+	<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+	
+    <style>
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+        /* 隱藏 details 的預設標記 (針對 Safari/Chrome) */
+        details > summary { list-style: none; }
+        details > summary::-webkit-details-marker { display: none; }
+    </style>
+	
+</head>
+<body class="bg-slate-900 min-h-screen text-slate-100 font-sans select-none">
+
+    <div class="flex h-screen overflow-hidden">
+
+        <!-- 左側導覽列 -->
+        <aside class="w-64 bg-slate-800 border-r border-slate-700 flex-shrink-0 hidden md:flex flex-col">
+            <div class="p-4">
+                <h1 class="text-xl font-bold text-blue-400 mb-6">🏠 居家倉儲</h1>
+                
+                <div class="mb-6">
+                    <label class="text-xs text-slate-500 mb-2 block">切換住家</label>
+                    <select id="homeSelect" onchange="switchHome()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 text-slate-200">
+                        <option value="高雄家">高雄家</option>
+                        <option value="台南宿舍">台南宿舍</option>
+                    </select>
+                </div>
+            </div>
+            
+            <nav class="flex-1 overflow-y-auto px-4 space-y-6">
+                <div>
+                    <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">存放位置導覽</h3>
+                    <ul class="space-y-2" id="sidebarLocationNav">
+                        <!-- 由 JavaScript 動態生成位置導覽 -->
+                    </ul>
+                </div>
+
+                <div>
+                    <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">系統設定</h3>
+                    <button onclick="openManageRoomsModal()" class="w-full text-left block px-4 py-1 rounded-lg hover:bg-slate-700 transition mb-1 text-slate-300">自訂樓層房間</button>
+                    <button onclick="openManageLocationsModal()" class="w-full text-left block px-4 py-1 rounded-lg hover:bg-slate-700 transition mb-1 text-slate-300">自訂存放位置</button>
+                    <button onclick="openManageCategoriesModal()" class="w-full text-left block px-4 py-1 rounded-lg hover:bg-slate-700 transition text-slate-300">自訂物品類別</button>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- 右側主內容 -->
+        <main class="flex-1 overflow-y-auto flex flex-col">
+            <!-- 頂部導覽列 -->
+            <header class="bg-slate-800/50 backdrop-blur-md sticky top-0 z-10 border-b border-slate-700">
+                <div class="px-8 py-4 flex justify-between items-center">
+                    <div id="currentHomeDisplay" class="text-lg font-medium text-slate-200">
+                        目前住家：高雄家
+                    </div>
+                    <div id="clock" class="text-sm text-slate-400 font-mono"></div>
+                </div>
+            </header>
+
+            <div class="p-5 flex-1">
+                <!-- 狀態摘要 -->
+                <section class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
+                    <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-lg">
+                        <p class="text-slate-400 text-sm">總庫存品項</p>
+                        <h2 id="totalItemsDisplay" class="text-3xl font-bold mt-1 text-blue-400">0 <span class="text-base font-normal text-slate-300">件</span></h2>
+                    </div>
+                    <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-lg">
+                        <p class="text-slate-400 text-sm">即將到期 (30天內)</p>
+                        <h2 id="expiringDisplay" class="text-3xl font-bold text-orange-400 mt-1">0 <span class="text-base font-normal text-slate-300">件</span></h2>
+                    </div>
+                    <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-lg">
+                        <p class="text-slate-400 text-sm">低庫存警示</p>
+                        <h2 id="lowStockDisplay" class="text-3xl font-bold text-red-400 mt-1">0 <span class="text-base font-normal text-slate-300">件</span></h2>
+                    </div>
+                </section>
+
+                <!-- 搜尋與類別篩選 -->
+                <section class="flex flex-col md:flex-row gap-4 mb-5">
+                    <div class="flex-1 relative">
+                        <input id="searchInput" type="text" oninput="triggerFilter()" placeholder="搜尋物品名稱..." 
+                            class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-blue-500 text-slate-100 placeholder-slate-500">
+                    </div>
+                    <select id="categoryFilter" onchange="triggerFilter()" class="bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-sm focus:outline-none text-slate-200">
+                        <option value="all">所有類別</option>
+                        <!-- 動態載入類別 -->
+                    </select>
+                </section>
+
+                <!-- 庫存明細列表 -->
+                <section class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-lg">
+                    <div class="flex justify-between items-center mb-5">
+                        <h3 class="text-lg font-bold flex items-center">
+                            庫存明細
+                            <span id="activeFilterBadge" class="ml-3 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-900/50 text-blue-300 hidden"></span>
+                        </h3>
+                        <button onclick="openAddEditItemModal()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg transition text-sm font-medium shadow-md shadow-blue-900/30">+ 新增物品</button>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="text-slate-400 border-b border-slate-700">
+                                <tr>
+                                    <th class="pb-2 font-normal">物品名稱</th>
+                                    <th class="pb-2 font-normal">類別</th>
+                                    <th class="pb-2 font-normal">存放位置</th>
+                                    <th class="pb-2 font-normal">數量</th>
+                                    <th class="pb-2 font-normal">有效期限</th>
+                                    <th class="pb-2 font-normal text-right">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventoryTableBody" class="divide-y divide-slate-700">
+                                <!-- 庫存數據將動態渲染 -->
+                            </tbody>
+                        </table>
+                        <div id="emptyState" class="py-12 text-center text-slate-500 hidden">
+                            無符合當前篩選條件的物品。
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- ==================== 浮動視窗 (Modal) 系統 ==================== -->
+    <div id="modalOverlay" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl transition-all scale-95" id="modalContainer">
+            <!-- Modal Header -->
+            <div class="px-6 py-4 border-b border-slate-700 flex justify-between items-center bg-slate-800/80">
+                <h3 id="modalTitle" class="text-lg font-bold text-slate-100">標題</h3>
+                <button onclick="closeActiveModal()" class="text-slate-400 hover:text-white text-2xl font-semibold focus:outline-none">&times;</button>
+            </div>
+            <!-- Modal Body -->
+            <div id="modalContent" class="p-6 max-h-[75vh] overflow-y-auto">
+                <!-- 動態注入的視窗內容 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== JavaScript 全邏輯 ==================== -->
+    <script>
+		const supabaseUrl = 'https://horjhocrxlhcehsthspv.supabase.co';
+		const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhvcmpob2NyeGxoY2Voc3Roc3B2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzNjMxMzgsImV4cCI6MjA5NzkzOTEzOH0.FeXNgxp3lJkEkgqE8XWF9McCgsVRRyPIahT8i0n9H4g';
+		const db = supabase.createClient(supabaseUrl, supabaseKey);
+		
+        // --- 核心資料庫 (記憶體狀態) ---
+        let state = {
+            currentHome: "高雄家",
+            filterCategory: "all",
+            filterMode: "all",
+            filterValue: "", 
+            searchQuery: "",
+            rooms: {},
+            locations: [],
+            categories: [],
+            items: []
+        };
+
+		async function loadDataFromSupabase() {
+			try {
+				// 讀取類別
+				const { data:cat, error1 } = await db.from('StoreHouse_Categories').select('*');
+				if (error1) throw error1;
+				state.categories = cat || [];
+		
+				// 讀取房間 (包含存放位置)
+				const { data:room, error2 } = await db.from('StoreHouse_Rooms').select('*');
+				if (error2) throw error2;
+				state.locations = room || [];
+		
+				// 讀取物品
+				const { data:item, error3 } = await db.from('StoreHouse_Items').select('*');
+				if (error3) throw error3;
+				state.items = item || [];
+		
+                // 整理房間資料
+				const rooms = state.locations.reduce((acc, curr) => {
+					if (!acc[curr.home]) {
+						acc[curr.home] = [];
+					}
+					if (!acc[curr.home].includes(curr.room)) {
+						acc[curr.home].push(curr.room);
+					}
+					return acc;
+				}, {});
+		
+				state.rooms = rooms;
+		
+				renderAll(); 
+			} catch (err) {
+				console.error('載入資料失敗:', err);
+			}
+		}
+
+        // --- 初始化載入 ---
+        window.onload = function() {
+			loadDataFromSupabase();
+            updateClock();
+            setInterval(updateClock, 1000);
+        };
+
+        // --- 全域渲染器 ---
+        function renderAll() {
+            renderSidebarLocations();
+            renderCategoryDropdown();
+            renderTable();
+            renderStats();
+        }
+
+        // 統一的過濾器函式
+        function filterItems(mode, value, event) {
+            if(event) {
+                event.stopPropagation();
+                event.preventDefault(); 
+            }
+            state.filterMode = mode;
+            state.filterValue = value;
+            renderSidebarLocations();
+            renderTable();
+        }
+
+        // --- 1. 左側存放位置樹狀導覽動態渲染 ---
+        function renderSidebarLocations() {
+            const sidebar = document.getElementById('sidebarLocationNav');
+            sidebar.innerHTML = '';
+
+            const allActive = state.filterMode === 'all';
+            const allLi = document.createElement('li');
+            allLi.innerHTML = `
+                <button onclick="filterItems('all', null, event)" class="w-full text-left px-4 py-1 rounded-lg transition text-sm font-medium ${allActive ? 'bg-blue-600 text-white' : 'hover:bg-slate-700 text-slate-300'}">
+                    顯示所有位置
+                </button>
+            `;
+            sidebar.appendChild(allLi);
+
+            const currentLocations = state.locations.filter(l => l.home === state.currentHome);
+            const groups = {};
+            currentLocations.forEach(loc => {
+                const groupName = loc.room;
+                if (!groups[groupName]) groups[groupName] = [];
+                groups[groupName].push(loc);
+            });
+
+            for (const [groupName, locList] of Object.entries(groups)) {
+                const detailsLi = document.createElement('li');
+                let subItemsHtml = '';
+                locList.forEach(loc => {
+                    if(loc.name === 'null') return; // 不顯示未命名位置
+                    const fullLocStr = `${loc.room}：${loc.name}`;
+                    const isSelected = state.filterMode === 'exact' && state.filterValue === fullLocStr;
+                    subItemsHtml += `
+                        <li>
+                            <button onclick="filterItems('exact', '${fullLocStr}', event)" class="w-full text-left block px-4 py-1 text-xs rounded transition ${isSelected ? 'text-blue-400 font-semibold bg-slate-700/50' : 'text-slate-400 hover:text-white hover:bg-slate-700/30'}">
+                                📍 ${loc.name}
+                            </button>
+                        </li>
+                    `;
+                });
+
+                const isRoomSelected = state.filterMode === 'room' && state.filterValue === groupName;
+                const summaryBaseClass = "cursor-pointer px-4 py-1 rounded-lg list-none flex justify-between items-center text-sm font-medium transition";
+                const summaryActiveStyle = isRoomSelected ? "bg-slate-700/50 text-blue-400 font-bold" : "hover:bg-slate-700 text-slate-300";
+
+                detailsLi.innerHTML = `
+                    <details class="group" open>
+                        <summary class="${summaryBaseClass} ${summaryActiveStyle}">
+                            <span onclick="filterItems('room', '${groupName}', event)" class="flex-1 hover:text-blue-300 transition">🏢 ${groupName}</span>
+                            <span class="text-xs text-slate-500 transition-transform group-open:rotate-180 px-2">▼</span>
+                        </summary>
+                        <ul class="pl-4 mt-1 space-y-1 border-l border-slate-700 ml-4">
+                            ${subItemsHtml}
+                        </ul>
+                    </details>
+                `;
+                sidebar.appendChild(detailsLi);
+            }
+        }
+
+        // --- 2. 篩選類別下拉式選單動態渲染 ---
+        function renderCategoryDropdown() {
+            const dropdown = document.getElementById('categoryFilter');
+            const currentValue = dropdown.value || 'all';
+            dropdown.innerHTML = '<option value="all">所有類別</option>';
+            
+			state.categories.forEach(cat => {
+				const opt = document.createElement('option');
+				opt.value = cat.ID; 
+				opt.textContent = cat.Category_Name; 
+				dropdown.appendChild(opt);
+			});
+            dropdown.value = currentValue;
+        }
+
+        // --- 3. 狀態統計數據渲染 ---
+        function renderStats() {
+            const currentItems = state.items.filter(item => item.home === state.currentHome);
+            const totalItems = currentItems.length;
+            document.getElementById('totalItemsDisplay').innerHTML = `${totalItems} <span class="text-base font-normal text-slate-300">件</span>`;
+
+            const today = new Date();
+            const limitDate = new Date();
+            limitDate.setDate(today.getDate() + 30);
+
+            const expiringCount = currentItems.filter(item => {
+                if (!item.expiry) return false;
+                const expDate = new Date(item.expiry);
+                return expDate >= today && expDate <= limitDate;
+            }).length;
+            document.getElementById('expiringDisplay').innerHTML = `${expiringCount} <span class="text-base font-normal text-slate-300">件</span>`;
+
+            const lowStockCount = currentItems.filter(item => item.quantity <= 1).length;
+            document.getElementById('lowStockDisplay').innerHTML = `${lowStockCount} <span class="text-base font-normal text-slate-300">件</span>`;
+        }
+
+        // --- 4. 庫存表格資料渲染 (核心篩選引擎) ---
+        function renderTable() {
+            const tbody = document.getElementById('inventoryTableBody');
+            const emptyState = document.getElementById('emptyState');
+            tbody.innerHTML = '';
+
+            let filteredItems = state.items.filter(item => {
+                if (item.home !== state.currentHome) return false;
+                if (state.filterCategory !== 'all' && item.category !== state.filterCategory) return false;
+                if (state.filterMode === 'room' && item.room !== state.filterValue) return false;
+                if (state.filterMode === 'exact') {
+                    const [fRoom, fLoc] = state.filterValue.split('：');
+                    if (item.room !== fRoom || item.location !== fLoc) return false;
+                }
+                if (state.searchQuery && !item.name.toLowerCase().includes(state.searchQuery.toLowerCase())) return false;
+                return true;
+            });
+
+            const filterBadge = document.getElementById('activeFilterBadge');
+            if (state.filterMode === 'all') {
+                filterBadge.innerText = `所有位置`;
+                filterBadge.classList.remove('hidden');
+			} else if (state.filterMode === 'room') {
+                filterBadge.innerText = `篩選樓層：${state.filterValue}`;
+                filterBadge.classList.remove('hidden');
+            } else if (state.filterMode === 'exact') {
+                filterBadge.innerText = `篩選位置：${state.filterValue}`;
+                filterBadge.classList.remove('hidden');
+            } else {
+                filterBadge.classList.add('hidden');
+            }
+
+            if (filteredItems.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            } else {
+                emptyState.classList.add('hidden');
+            }
+
+            filteredItems.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-800/40 transition-colors";
+                
+                let qtyDisplay = `${item.quantity}`;
+                let qtyClass = "text-slate-100";
+                if (item.quantity === 0) {
+                    qtyDisplay = `0 (缺貨)`;
+                    qtyClass = "text-red-400 font-bold";
+                } else if (item.quantity === 1) {
+                    qtyDisplay = `1 (偏低)`;
+                    qtyClass = "text-orange-400 font-semibold";
+                }
+
+                let expiryDisplay = item.expiry || '-';
+                let expiryClass = "text-slate-300";
+                if (item.expiry) {
+                    const today = new Date();
+                    const expDate = new Date(item.expiry);
+                    const daysLeft = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));
+                    if (daysLeft < 0) {
+                        expiryDisplay = `${item.expiry} (已過期)`;
+                        expiryClass = "text-red-500 font-semibold";
+                    } else if (daysLeft <= 30) {
+                        expiryDisplay = `${item.expiry} (${daysLeft}天)`;
+                        expiryClass = "text-orange-400 font-semibold";
+                    } else {
+                        expiryClass = "text-emerald-400";
+                    }
+                }
+
+                tr.innerHTML = `
+                    <td class="py-1 font-medium text-slate-100">${item.name}</td>
+                    <td class="py-1 text-slate-400 text-sm">${item.category}</td>
+                    <td class="py-1 text-slate-400 text-sm">${item.room}：${item.location}</td>
+                    <td class="py-1 ${qtyClass}">${qtyDisplay}</td>
+                    <td class="py-1 ${expiryClass}">${expiryDisplay}</td>
+                    <td class="py-1 text-right flex justify-end space-x-3">
+                        <button onclick="openAddEditItemModal(${item.id})" class="text-slate-400 hover:text-blue-400 p-1 rounded hover:bg-slate-700/50 transition" title="編輯">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                        </button>
+                        <button onclick="confirmDeleteItem(${item.id})" class="text-slate-400 hover:text-red-400 p-1 rounded hover:bg-slate-700/50 transition" title="刪除">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // --- 5. 住家切換功能 ---
+        function switchHome() {
+            const select = document.getElementById('homeSelect');
+            const display = document.getElementById('currentHomeDisplay');
+            state.currentHome = select.value;
+            display.innerText = `目前住家：${state.currentHome}`;
+            
+            state.filterMode = 'all';
+            state.filterValue = '';
+            
+            renderAll();
+        }
+
+        // --- 6. 事件過濾觸發器 ---
+        function triggerFilter() {
+            state.searchQuery = document.getElementById('searchInput').value;
+			const select = document.getElementById('categoryFilter');
+			const selectedText = select.options[select.selectedIndex].text;
+			state.filterCategory = (select.value === 'all') ? 'all' : selectedText;
+            renderTable();
+        }
+
+        // --- 7. 時間時鐘更新 ---
+        function updateClock() {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' });
+            const timeStr = now.toLocaleTimeString('zh-TW', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            document.getElementById('clock').innerText = `${dateStr} ${timeStr}`;
+        }
+
+        // ==================== 自訂彈出視窗 UI 互動引擎 ====================
+        function openModal(title, contentHtml) {
+            const overlay = document.getElementById('modalOverlay');
+            const titleEl = document.getElementById('modalTitle');
+            const contentEl = document.getElementById('modalContent');
+            titleEl.innerText = title;
+            contentEl.innerHTML = contentHtml;
+            overlay.classList.remove('hidden');
+        }
+
+        function closeActiveModal() {
+            const overlay = document.getElementById('modalOverlay');
+            const container = document.getElementById('modalContainer');
+            container.classList.remove('scale-100');
+            container.classList.add('scale-95');
+            setTimeout(() => { overlay.classList.add('hidden'); }, 150);
+        }
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === "Escape") closeActiveModal();
+        });
+
+        // --- 功能 A: 新增 / 編輯物品 Modal ---
+        window.updateModalLocationOptions = function() {
+            const selectedRoom = document.getElementById('formItemRoom').value;
+            const locSelect = document.getElementById('formItemLocationName');
+            const validLocs = state.locations.filter(l => l.home === state.currentHome && l.room === selectedRoom && l.name !== 'null');
+            
+            if (validLocs.length > 0) {
+                locSelect.innerHTML = validLocs.map(l => `<option value="${l.name}">${l.name}</option>`).join('');
+                locSelect.disabled = false;
+            } else {
+                locSelect.innerHTML = '<option value="" disabled selected>該樓層無存放位置</option>';
+                locSelect.disabled = true;
+            }
+        }
+
+        function openAddEditItemModal(itemId = null) {
+            const isEdit = itemId !== null;
+            const currentLocs = state.locations.filter(l => l.home === state.currentHome && l.name !== 'null');
+            const currentRooms = state.rooms[state.currentHome] || [];
+            
+            let item = { name: '', category: state.categories[0]?.Category_Name || '未分類', quantity: 1, expiry: '' };
+            //let itemRoom = currentRooms.length > 0 ? currentRooms[0] : '';
+			let itemRoom = ""//state.filterValue != "" ? state.filterValue : currentRooms[0];
+			if(currentRooms.length > 0)
+			{
+				if(state.filterValue != null && state.filterValue != "")
+				{
+					itemRoom = state.filterValue.includes('：') ? state.filterValue.split('：')[0] : state.filterValue;
+				}
+				else
+				{
+					itemRoom = currentRooms[0];
+				}
+			}
+			let itemLocName = '';
+
+            if (isEdit) {
+                item = state.items.find(i => i.id === itemId);
+                if (!item) return;
+                itemRoom = item.room;
+                itemLocName = item.location;
+            } else {
+                const locsInRoom = currentLocs.filter(l => l.room === itemRoom);
+                if (locsInRoom.length > 0) 
+				{
+					if(state.filterValue != null && state.filterValue != "")
+					{
+						itemLocName = state.filterValue.includes('：') ? state.filterValue.split('：')[1] : locsInRoom[0].name;
+					}
+					else
+					{
+						itemLocName = locsInRoom[0].name;
+					}
+				}
+            }
+
+			const catOptions = state.categories.map(c => `<option value="${c.ID}" ${item.category === c.Category_Name ? 'selected' : ''}>${c.Category_Name}</option>`).join('');
+            const roomOptions = currentRooms.map(r => `<option value="${r}" ${itemRoom === r ? 'selected' : ''}>${r}</option>`).join('');
+            const validLocs = currentLocs.filter(l => l.room === itemRoom);
+            const locOptions = validLocs.map(l => `<option value="${l.name}" ${itemLocName === l.name ? 'selected' : ''}>${l.name}</option>`).join('');
+
+            const html = `
+                <form id="itemForm" onsubmit="saveItem(event, ${itemId})" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-1">物品名稱 <span class="text-red-500">*</span></label>
+                        <input type="text" id="formItemName" required value="${item.name}" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500" placeholder="例如：急救藥箱">
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">類別</label>
+                            <select id="formItemCategory" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 text-slate-200">
+                                ${catOptions}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">庫存數量</label>
+                            <input type="number" id="formItemQuantity" required min="0" value="${item.quantity}" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">樓層房間</label>
+                            <select id="formItemRoom" onchange="updateModalLocationOptions()" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 text-slate-200">
+                                ${roomOptions || '<option value="" disabled selected>請先自訂樓層</option>'}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">存放位置</label>
+                            <select id="formItemLocationName" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 text-slate-200">
+                                ${locOptions || '<option value="" disabled selected>該樓層無存放位置</option>'}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-1">有效期限</label>
+                        <input type="date" id="formItemExpiry" value="${item.expiry}" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 text-slate-200">
+                    </div>
+
+                    <div class="pt-4 border-t border-slate-700 flex justify-end space-x-3">
+                        <button type="button" onclick="closeActiveModal()" class="px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 rounded-lg transition">取消</button>
+                        <button type="submit" class="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition">${isEdit ? '更新保存' : '確認新增'}</button>
+                    </div>
+                </form>
+            `;
+            openModal(isEdit ? "✏️ 編輯物品資訊" : "➕ 新增物資品項", html);
+        }
+
+        async function saveItem(event, itemId) {
+            event.preventDefault();
+            const name = document.getElementById('formItemName').value;
+            const categorySelect = document.getElementById('formItemCategory');
+            const category = categorySelect.options[categorySelect.selectedIndex].text; // 取得中文名稱
+            const quantity = parseInt(document.getElementById('formItemQuantity').value, 10);
+            const expiry = document.getElementById('formItemExpiry').value;
+            const room = document.getElementById('formItemRoom').value;
+            const locName = document.getElementById('formItemLocationName').value;
+            
+            if (!room || !locName) {
+                alert("請確保已選擇存放位置");
+                return;
+            }
+
+            if (itemId === null) {
+                // 新增物品
+                const newItem = {
+                    id: Date.now(),
+                    category, name, quantity, 
+					home: state.currentHome, room, location: locName, 
+					expiry
+                };
+				if(newItem.expiry == "")
+				{
+					newItem.expiry = null;
+				}
+                state.items.push(newItem);
+                // 寫入 Supabase
+                const { error } = await db.from('StoreHouse_Items').insert([newItem]);
+				if (error) console.error("新增物品失敗:", error);
+            } else {
+                // 編輯更新
+                const index = state.items.findIndex(i => i.id === itemId);
+                if (index !== -1) {
+                    state.items[index] = { ...state.items[index], name, category, room, location: locName, quantity, expiry };
+                    // 寫入 Supabase
+                    const { error } = await db.from('StoreHouse_Items').update({ name, category, room, location: locName, quantity, expiry }).eq('id', itemId);
+					if (error) console.error("新增物品失敗:", error);
+                }
+            }
+
+            closeActiveModal();
+            renderAll();
+        }
+
+        // ==========================================
+        // 功能 B0: 自訂樓層房間管理 (CRUD + 連動更新)
+        // ==========================================
+        let editingRoomName = null; // 紀錄正在編輯的房間名稱
+
+        function openManageRoomsModal() {
+            editingRoomName = null;
+            if(!state.rooms[state.currentHome]) state.rooms[state.currentHome] = [];
+            const currentRooms = state.rooms[state.currentHome];
+
+            let listHtml = currentRooms.map((room) => `
+                <div class="flex justify-between items-center py-2 border-b border-slate-700 hover:bg-slate-800/50 px-2 rounded transition">
+                    <span class="text-sm font-medium text-slate-200">🏢 ${room}</span>
+                    <div class="flex space-x-2">
+                        <button onclick="editRoom('${room}')" class="text-blue-400 hover:text-blue-300 p-1 text-xs transition">編輯</button>
+                        <button onclick="deleteRoom('${room}')" class="text-red-400 hover:text-red-300 p-1 text-xs transition">移除</button>
+                    </div>
+                </div>
+            `).join('');
+
+            if (currentRooms.length === 0) {
+                listHtml = `<p class="text-slate-500 text-sm text-center py-4">目前無任何樓層房間</p>`;
+            }
+
+            const html = `
+                <div class="space-y-4">
+                    <div class="flex gap-2">
+                        <input type="text" id="newRoomInput" placeholder="例如：三樓、地下室" class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 text-slate-200">
+                        <button id="roomSubmitBtn" onclick="addOrUpdateRoom()" class="bg-blue-600 hover:bg-blue-500 text-white text-sm px-4 rounded-lg transition">新增</button>
+                    </div>
+                    <div class="max-h-60 overflow-y-auto pr-2 overflow-x-hidden">
+                        ${listHtml}
+                    </div>
+                    <div class="pt-4 border-t border-slate-700 flex justify-end">
+                        <button onclick="closeActiveModal()" class="px-4 py-2 text-sm bg-slate-700 hover:bg-slate-600 rounded-lg transition text-slate-200">關閉</button>
+                    </div>
+                </div>
+            `;
+            openModal(`🏢 自訂樓層房間管理 - ${state.currentHome}`, html);
+        }
+
+        function editRoom(roomName) {
+            editingRoomName = roomName;
+            document.getElementById('newRoomInput').value = roomName;
+            const btn = document.getElementById('roomSubmitBtn');
+            btn.innerText = '儲存';
+            btn.classList.replace('bg-blue-600', 'bg-emerald-600');
+            btn.classList.replace('hover:bg-blue-500', 'hover:bg-emerald-500');
+        }
+
+        async function addOrUpdateRoom() {
+            const input = document.getElementById('newRoomInput');
+            const val = input.value.trim();
+            if (!val) return;
+            
+            const currentRooms = state.rooms[state.currentHome];
+
+            if (editingRoomName) {
+                const oldRoom = editingRoomName;
+                if (val !== oldRoom && !currentRooms.includes(val)) {
+                    // 更新本地 Rooms 清單
+                    const idx = currentRooms.indexOf(oldRoom);
+                    if (idx > -1) currentRooms[idx] = val;
+
+                    // 全域連動更新：更新 Locations
+                    state.locations.forEach(loc => { 
+                        if(loc.home === state.currentHome && loc.room === oldRoom) {
+                            loc.room = val; 
+                        }
+                    });
+
+                    // 全域連動更新：更新 Items
+                    state.items.forEach(item => {
+                        if(item.home === state.currentHome && item.room === oldRoom) {
+                            item.room = val;
+                        }
+                    });
+					
+                    // 寫入 Supabase (連動更新 StoreHouse_Rooms 與 StoreHouse_Items)
+					await updateRoomInSupabase(oldRoom, val, state.currentHome);
+                }
+            } else {
+                if (currentRooms.includes(val)) { input.value = ''; return; }
+                currentRooms.push(val);
+				
+				const newLocation = { 
+					id: Date.now(), 
+					home: state.currentHome, 
+					room: val,
+					name: "null" 
+				};
+				state.locations.push(newLocation);
+				
+                // 寫入 Supabase
+				await addRoomToSupabase(newLocation);
+            }
+            renderAll();
+            openManageRoomsModal();
+        }
+
+        async function deleteRoom(roomName) {
+            const idx = state.rooms[state.currentHome].indexOf(roomName);
+            if (idx > -1) state.rooms[state.currentHome].splice(idx, 1);
+			
+            // 刪除相關的 locations
+			state.locations = state.locations.filter(l => !(l.home === state.currentHome && l.room === roomName));
+			
+			// 刪除 Supabase 中此住家的該房間記錄
+			await deleteRoomFromSupabase(roomName, state.currentHome);
+			
+            renderAll();
+            openManageRoomsModal();
+        }
+		
+		async function addRoomToSupabase(newItem) {
+			const { error } = await db.from('StoreHouse_Rooms').insert([newItem]);
+			if (error) console.error("新增房間失敗:", error);
+		}
+		
+		async function deleteRoomFromSupabase(roomName, home) {
+			const { error } = await db.from('StoreHouse_Rooms').delete().eq('home', home).eq('room', roomName); 
+			if (error) console.error("刪除房間失敗:", error);
+		}
+		
+		async function updateRoomInSupabase(oldName, newName, home) {
+            // 同步更新 StoreHouse_Rooms 與 StoreHouse_Items
+			const { error1 } = await db.from('StoreHouse_Rooms').update({ room: newName }).eq('home', home).eq('room', oldName);
+            const { error2 } = await db.from('StoreHouse_Items').update({ room: newName }).eq('home', home).eq('room', oldName);
+			if (error1 || error2) console.error("更新房間名稱及物品連動失敗:", error1, error2);
+		}
+
+
+        // ==========================================
+        // 功能 B: 自訂存放位置管理 (CRUD + 連動更新)
+        // ==========================================
+        let editingLocGlobalIdx = -1;
+
+        function openManageLocationsModal() {
+            editingLocGlobalIdx = -1;
+            const currentLocs = state.locations.filter(l => l.home === state.currentHome && l.name !== "null");
+
+            let listHtml = currentLocs.map((loc) => {
+                const globalIdx = loc.id;
+                return `
+                <div class="flex justify-between items-center py-2 border-b border-slate-700 hover:bg-slate-800/50 px-2 rounded transition">
+                    <span class="text-sm font-medium text-slate-200">📍 ${loc.room}：${loc.name}</span>
+                    <div class="flex space-x-2">
+                        <button onclick="editLocation(${globalIdx})" class="text-blue-400 hover:text-blue-300 p-1 text-xs transition">編輯</button>
+                        <button onclick="deleteLocation(${globalIdx})" class="text-red-400 hover:text-red-300 p-1 text-xs transition">移除</button>
+                    </div>
+                </div>
+            `}).join('');
+
+            if (currentLocs.length === 0) {
+                listHtml = `<p class="text-slate-500 text-sm text-center py-4">目前無任何存放位置</p>`;
+            }
+
+            const currentRooms = state.rooms[state.currentHome] || [];
+            const roomOptions = currentRooms.map(r => `<option value="${r}">${r}</option>`).join('');
+
+            const html = `
+                <div class="space-y-4">
+                    <div class="flex gap-2">
+                        <select id="newLocRoomSelect" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 text-slate-200 w-1/3">
+                            <option value="" disabled selected>選擇樓層/房間</option>
+                            ${roomOptions}
+                        </select>
+                        <input type="text" id="newLocInput" placeholder="例如：車庫物資櫃" class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 text-slate-200">
+                        <button id="locSubmitBtn" onclick="addOrUpdateLocation()" class="bg-blue-600 hover:bg-blue-500 text-white text-sm px-4 rounded-lg transition">新增</button>
+                    </div>
+                    <div class="max-h-60 overflow-y-auto pr-2 overflow-x-hidden">
+                        ${listHtml}
+                    </div>
+                    <div class="pt-4 border-t border-slate-700 flex justify-end">
+                        <button onclick="closeActiveModal()" class="px-4 py-2 text-sm bg-slate-700 hover:bg-slate-600 rounded-lg transition text-slate-200">關閉</button>
+                    </div>
+                </div>
+            `;
+            openModal(`📂 自訂存放位置管理 - ${state.currentHome}`, html);
+        }
+
+        function editLocation(id) {
+            editingLocGlobalIdx = id;
+            const loc = state.locations.find(c => c.id === id);
+            document.getElementById('newLocRoomSelect').value = loc.room;
+            document.getElementById('newLocInput').value = loc.name;
+            const btn = document.getElementById('locSubmitBtn');
+            btn.innerText = '儲存';
+            btn.classList.replace('bg-blue-600', 'bg-emerald-600');
+            btn.classList.replace('hover:bg-blue-500', 'hover:bg-emerald-500');
+        }
+
+        async function addOrUpdateLocation() {
+            const room = document.getElementById('newLocRoomSelect').value;
+            const name = document.getElementById('newLocInput').value.trim();
+            if (!room || !name) return;
+            
+            if (editingLocGlobalIdx > -1) {
+                const locObj = state.locations.find(l => l.id === editingLocGlobalIdx);
+                const oldName = locObj.name;
+                const oldRoom = locObj.room;
+                
+                const exists = state.locations.some(l => l.id !== editingLocGlobalIdx && l.home === state.currentHome && l.room === room && l.name === name);
+                
+                if (!exists) {
+                    // 更新本地 location
+                    locObj.room = room;
+                    locObj.name = name;
+					
+                    // 全域連動更新：更新所有物品的存放位置 (限當前住家)
+                    state.items.forEach(item => {
+                        if (item.home === state.currentHome && item.room === oldRoom && item.location === oldName) {
+                            item.room = room;
+                            item.location = name;
+                        }
+                    });
+
+                    // 寫入 Supabase (連動更新)
+                    await updateLocationInSupabase(editingLocGlobalIdx, oldRoom, oldName, room, name, state.currentHome);
+                }
+            } else {
+                const exists = state.locations.some(l => l.home === state.currentHome && l.room === room && l.name === name);
+                if (exists) { document.getElementById('newLocInput').value = ''; return; }
+                
+                const newLoc = { id: Date.now(), home: state.currentHome, room, name };
+                state.locations.push(newLoc);
+                await addLocationToSupabase(newLoc);
+            }
+            renderAll();
+            openManageLocationsModal();
+        }
+
+        async function deleteLocation(id) {
+            state.locations = state.locations.filter(l => l.id !== id);
+            await deleteLocationFromSupabase(id);
+            renderAll();
+            openManageLocationsModal();
+        }
+
+		async function addLocationToSupabase(newItem) {
+			const { error } = await db.from('StoreHouse_Rooms').insert([newItem]); 
+			if (error) console.error("新增存放位置失敗:", error);
+		}
+		
+		async function deleteLocationFromSupabase(id) {
+            // 修正為從 Rooms 資料表中刪除正確的位置 id
+			const { error } = await db.from('StoreHouse_Rooms').delete().eq('id', id); 
+			if (error) console.error("刪除存放位置失敗:", error);
+		}
+		
+		async function updateLocationInSupabase(id, oldRoom, oldName, newRoom, newName, home) {
+			// 更新 StoreHouse_Rooms 
+			const { error1 } = await db.from('StoreHouse_Rooms').update({ room: newRoom, name: newName }).eq('id', id);
+            // 更新 StoreHouse_Items
+            const { error2 } = await db.from('StoreHouse_Items').update({ room: newRoom, location: newName }).eq('home', home).eq('room', oldRoom).eq('location', oldName);
+
+			if (error1 || error2) console.error("更新位置與連動物品失敗:", error1, error2);
+		}
+
+
+        // ==========================================
+        // 功能 C: 自訂物品類別管理 (CRUD + 連動更新)
+        // ==========================================
+        let editingCatIdx = -1;
+
+        function openManageCategoriesModal() {
+            editingCatIdx = -1;
+			let listHtml = state.categories.map(cat => `
+				<div class="flex justify-between items-center py-2 border-b border-slate-700 hover:bg-slate-800/50 px-2 rounded transition">
+					<span class="text-sm font-medium text-slate-200">🏷️ ${cat.Category_Name}</span>
+					<div class="flex space-x-2">
+						<button onclick="editCategory(${cat.ID})" class="text-blue-400 hover:text-blue-300 p-1 text-xs transition">編輯</button>
+						<button onclick="deleteCategory(${cat.ID})" class="text-red-400 hover:text-red-300 p-1 text-xs transition">移除</button>
+					</div>
+				</div>
+			`).join('');
+
+            if (state.categories.length === 0) {
+                listHtml = `<p class="text-slate-500 text-sm text-center py-4">目前無任何物品類別</p>`;
+            }
+
+            const html = `
+                <div class="space-y-4">
+                    <div class="flex gap-2">
+                        <input type="text" id="newCatInput" placeholder="例如：清潔洗劑" class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 text-slate-200">
+                        <button id="catSubmitBtn" onclick="addOrUpdateCategory()" class="bg-blue-600 hover:bg-blue-500 text-white text-sm px-4 rounded-lg transition">新增</button>
+                    </div>
+                    <div class="max-h-60 overflow-y-auto pr-2 overflow-x-hidden">
+                        ${listHtml}
+                    </div>
+                    <div class="pt-4 border-t border-slate-700 flex justify-end">
+                        <button onclick="closeActiveModal()" class="px-4 py-2 text-sm bg-slate-700 hover:bg-slate-600 rounded-lg transition text-slate-200">關閉</button>
+                    </div>
+                </div>
+            `;
+            openModal("🏷️ 自訂物品類別管理", html);
+        }
+
+        function editCategory(idx) {
+            editingCatIdx = idx;
+			const catToEdit = state.categories.find(c => c.ID === idx);
+			if (!catToEdit) return;
+
+			document.getElementById('newCatInput').value = catToEdit.Category_Name;
+			const btn = document.getElementById('catSubmitBtn');
+			btn.innerText = '儲存';
+			btn.classList.replace('bg-blue-600', 'bg-emerald-600');
+			btn.classList.replace('hover:bg-blue-500', 'hover:bg-emerald-500');
+        }
+
+        async function addOrUpdateCategory() {
+            const input = document.getElementById('newCatInput');
+            const val = input.value.trim();
+            if (!val) return;
+            
+            if (editingCatIdx > -1) {
+				const catToUpdate = state.categories.find(c => c.ID === editingCatIdx);
+				
+				if (catToUpdate) {
+					const oldName = catToUpdate.Category_Name;
+					const isDuplicate = state.categories.some(c => c.Category_Name === val && c.ID !== editingCatIdx);
+					if (val !== oldName && !isDuplicate) {
+						// 更新本地狀態
+						catToUpdate.Category_Name = val;
+						state.items.forEach(item => {
+							if (item.category === oldName) item.category = val;
+						});
+			
+						// 寫入 Supabase (連動更新 StoreHouse_Categories 與 StoreHouse_Items)
+						await updateCategoryInSupabase(editingCatIdx, oldName, val);
+					}
+				}
+            } else {
+				if (state.categories.some(c => c.Category_Name === val)) {
+					alert("這個類別名稱已經存在了！");
+					input.value = ''; 
+					return; 
+				}
+				
+                const newCat = { ID: Date.now(), Category_Name: val };
+				state.categories.push(newCat);
+				await addCategorieToSupabase(newCat);
+            }
+            renderAll();
+            openManageCategoriesModal();
+        }
+
+        async function deleteCategory(idx) {
+			state.categories = state.categories.filter(c => c.ID !== idx);
+			await deleteCategorieFromSupabase(idx)
+            renderAll();
+            openManageCategoriesModal();
+        }
+		
+		async function addCategorieToSupabase(newItem) {
+			const { error } = await db.from('StoreHouse_Categories').insert([newItem]); 
+			if (error) console.error("新增類別失敗:", error);
+		}
+		
+		async function deleteCategorieFromSupabase(itemId) {
+			const { error } = await db.from('StoreHouse_Categories').delete().eq('ID', itemId); 
+			if (error) console.error("刪除類別失敗:", error);
+		}
+		
+		async function updateCategoryInSupabase(id, oldName, newName) {
+			// 同步更新 StoreHouse_Categories 與 StoreHouse_Items
+			const { error1 } = await db.from('StoreHouse_Categories').update({ Category_Name: newName }).eq('ID', id);
+			const { error2 } = await db.from('StoreHouse_Items').update({ category: newName }).eq('category', oldName);
+			if (error1 || error2) console.error("更新類別名稱及物品連動失敗:", error1, error2);
+		}
+
+
+        // --- 功能 D: 刪除物品確認 Modal ---
+        function confirmDeleteItem(itemId) {
+            const item = state.items.find(i => i.id === itemId);
+            if (!item) return;
+
+            const html = `
+                <div class="space-y-4">
+                    <p class="text-slate-300 text-sm leading-relaxed">
+                        您確定要刪除物資「<span class="text-red-400 font-bold">${item.name}</span>」嗎？此操作將無法還原。
+                    </p>
+                    <div class="pt-4 border-t border-slate-700 flex justify-end space-x-3">
+                        <button onclick="closeActiveModal()" class="px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 rounded-lg transition">取消</button>
+                        <button onclick="executeDeleteItem(${itemId})" class="px-4 py-2 text-sm bg-red-600 hover:bg-red-500 text-white rounded-lg transition">確認刪除</button>
+                    </div>
+                </div>
+            `;
+            openModal("⚠️ 確認刪除物資", html);
+        }
+
+        async function executeDeleteItem(itemId) {
+            state.items = state.items.filter(i => i.id !== itemId);
+            // 寫入 Supabase (從資料庫刪除物品)
+            await db.from('StoreHouse_Items').delete().eq('id', itemId);
+            closeActiveModal();
+            renderAll();
+        }
+    </script>
+</body>
+</html>
