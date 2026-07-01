@@ -748,7 +748,7 @@
                     <span class="text-sm font-medium text-slate-200">🏢 ${room}</span>
                     <div class="flex space-x-2">
                         <button onclick="editRoom('${room}')" class="text-blue-400 hover:text-blue-300 truncate text-xs transition">編輯</button>
-                        <button onclick="deleteRoom('${room}')" class="text-red-400 hover:text-red-300 truncate text-xs transition">移除</button>
+                        <button onclick="confirmDeleteRoom('${room}')" class="text-red-400 hover:text-red-300 truncate text-xs transition">移除</button>
                     </div>
                 </div>
             `).join('');
@@ -820,7 +820,23 @@
             openManageRoomsModal();
         }
 
-        async function deleteRoom(roomName) {
+        function confirmDeleteRoom(roomName) {
+            const html = `
+                <div class="space-y-4">
+                    <p class="text-slate-300 text-sm leading-relaxed">
+                        您確定要刪除樓層房間「<span class="text-red-400 font-bold">${roomName}</span>」嗎？<br>
+                        <span class="text-xs text-slate-400 mt-2 block">注意：此操作無法還原，且相關存放位置與容器也將受到影響。</span>
+                    </p>
+                    <div class="pt-4 border-t border-slate-700 flex justify-end space-x-3">
+                        <button onclick="openManageRoomsModal()" class="px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 rounded-lg transition">取消</button>
+                        <button onclick="executeDeleteRoom('${roomName}')" class="px-4 py-2 text-sm bg-red-600 hover:bg-red-500 text-white rounded-lg transition">確認刪除</button>
+                    </div>
+                </div>
+            `;
+            openModal("⚠️ 確認刪除樓層房間", html);
+        }
+
+        async function executeDeleteRoom(roomName) {
             const idx = state.rooms[state.currentHome].indexOf(roomName);
             if (idx > -1) state.rooms[state.currentHome].splice(idx, 1);
 			
@@ -870,7 +886,7 @@
                     <span class="text-sm font-medium text-slate-200">📍 ${loc.room}：${loc.name}</span>
                     <div class="flex space-x-2">
                         <button onclick="editLocation(${loc.id})" class="text-blue-400 hover:text-blue-300 truncate text-xs transition">編輯</button>
-                        <button onclick="deleteLocation(${loc.id})" class="text-red-400 hover:text-red-300 truncate text-xs transition">移除</button>
+                        <button onclick="confirmDeleteLocation(${loc.id})" class="text-red-400 hover:text-red-300 truncate text-xs transition">移除</button>
                     </div>
                 </div>
             `}).join('');
@@ -897,7 +913,7 @@
                         <button id="locSubmitBtn" onclick="addOrUpdateLocation()" class="bg-blue-600 hover:bg-blue-500 text-white text-sm px-4 rounded-lg transition">新增</button>
                     </div>
                     <div id="locModalError" class="text-red-400 text-xs hidden"></div>
-                    <div id="locationModalListContainer" class="max-h-60 overflow-y-auto pr-2 overflow-x-hidden">
+                    <div id="locationModalListContainer" class="max-h-80 overflow-y-auto pr-2 overflow-x-hidden">
                         <!-- 存放位置列表 -->
                     </div>
                     <div class="pt-4 border-t border-slate-700 flex justify-end">
@@ -980,7 +996,25 @@
             openManageLocationsModal();
         }
 
-        async function deleteLocation(id) {
+        function confirmDeleteLocation(id) {
+            const loc = state.locations.find(l => l.id === id);
+            if (!loc) return;
+
+            const html = `
+                <div class="space-y-4">
+                    <p class="text-slate-300 text-sm leading-relaxed">
+                        您確定要刪除存放位置「<span class="text-red-400 font-bold">${loc.name}</span>」嗎？此操作將無法還原。
+                    </p>
+                    <div class="pt-4 border-t border-slate-700 flex justify-end space-x-3">
+                        <button onclick="openManageLocationsModal()" class="px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 rounded-lg transition">取消</button>
+                        <button onclick="executeDeleteLocation(${id})" class="px-4 py-2 text-sm bg-red-600 hover:bg-red-500 text-white rounded-lg transition">確認刪除</button>
+                    </div>
+                </div>
+            `;
+            openModal("⚠️ 確認刪除存放位置", html);
+        }
+
+        async function executeDeleteLocation(id) {
             state.locations = state.locations.filter(l => l.id !== id);
             await deleteLocationFromSupabase(id);
             renderAll();
@@ -1050,7 +1084,7 @@
                     <span class="text-sm font-medium text-slate-200">📦 ${box.room}：${box.location}：${box.name}</span>
                     <div class="flex space-x-2">
                         <button onclick="editBox(${box.id})" class="text-blue-400 hover:text-blue-300 truncate text-xs transition">編輯</button>
-                        <button onclick="deleteBox(${box.id})" class="text-red-400 hover:text-red-300 truncate text-xs transition">移除</button>
+                        <button onclick="confirmDeleteBox(${box.id})" class="text-red-400 hover:text-red-300 truncate text-xs transition">移除</button>
                     </div>
                 </div>
             `}).join('');
@@ -1082,7 +1116,7 @@
                         <button id="boxSubmitBtn" onclick="addOrUpdateBox()" class="bg-blue-600 hover:bg-blue-500 text-white text-sm px-4 rounded-lg transition">新增</button>
                     </div>
                     <div id="boxModalError" class="text-red-400 text-xs hidden"></div>
-                    <div id="boxModalListContainer" class="max-h-60 overflow-y-auto pr-2 overflow-x-hidden border-t border-slate-700 pt-2 mt-2">
+                    <div id="boxModalListContainer" class="max-h-80 overflow-y-auto pr-2 overflow-x-hidden border-t border-slate-700 pt-2 mt-2">
                         <!-- 容器列表 -->
                     </div>
                     <div class="pt-4 border-t border-slate-700 flex justify-end">
@@ -1163,7 +1197,25 @@
             openManageBoxesModal();
         }
 
-        async function deleteBox(id) {
+        function confirmDeleteBox(id) {
+            const box = state.boxes.find(b => b.id === id);
+            if (!box) return;
+
+            const html = `
+                <div class="space-y-4">
+                    <p class="text-slate-300 text-sm leading-relaxed">
+                        您確定要刪除容器「<span class="text-red-400 font-bold">${box.name}</span>」嗎？此操作將無法還原。
+                    </p>
+                    <div class="pt-4 border-t border-slate-700 flex justify-end space-x-3">
+                        <button onclick="openManageBoxesModal()" class="px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 rounded-lg transition">取消</button>
+                        <button onclick="executeDeleteBox(${id})" class="px-4 py-2 text-sm bg-red-600 hover:bg-red-500 text-white rounded-lg transition">確認刪除</button>
+                    </div>
+                </div>
+            `;
+            openModal("⚠️ 確認刪除容器", html);
+        }
+
+        async function executeDeleteBox(id) {
             state.boxes = state.boxes.filter(b => b.id !== id);
             await deleteBoxFromSupabase(id);
             renderAll();
@@ -1199,7 +1251,7 @@
 					<span class="text-sm font-medium text-slate-200">🏷️ ${cat.cat_name}</span>
 					<div class="flex space-x-2">
 						<button onclick="editCategory(${cat.id})" class="text-blue-400 hover:text-blue-300 truncate text-xs transition">編輯</button>
-						<button onclick="deleteCategory(${cat.id})" class="text-red-400 hover:text-red-300 truncate text-xs transition">移除</button>
+						<button onclick="confirmDeleteCategory(${cat.id})" class="text-red-400 hover:text-red-300 truncate text-xs transition">移除</button>
 					</div>
 				</div>
 			`).join('');
@@ -1214,7 +1266,7 @@
                         <input type="text" id="newCatInput" placeholder="例如：清潔洗劑" class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 text-slate-200">
                         <button id="catSubmitBtn" onclick="addOrUpdateCategory()" class="bg-blue-600 hover:bg-blue-500 text-white text-sm px-4 rounded-lg transition">新增</button>
                     </div>
-                    <div class="max-h-60 overflow-y-auto pr-2 overflow-x-hidden">
+                    <div class="max-h-80 overflow-y-auto pr-2 overflow-x-hidden">
                         ${listHtml}
                     </div>
                     <div class="pt-4 border-t border-slate-700 flex justify-end">
@@ -1270,7 +1322,25 @@
             openManageCategoriesModal();
         }
 
-        async function deleteCategory(idx) {
+        function confirmDeleteCategory(id) {
+            const cat = state.categories.find(c => c.id === id);
+            if (!cat) return;
+
+            const html = `
+                <div class="space-y-4">
+                    <p class="text-slate-300 text-sm leading-relaxed">
+                        您確定要刪除物品類別「<span class="text-red-400 font-bold">${cat.cat_name}</span>」嗎？此操作將無法還原。
+                    </p>
+                    <div class="pt-4 border-t border-slate-700 flex justify-end space-x-3">
+                        <button onclick="openManageCategoriesModal()" class="px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 rounded-lg transition">取消</button>
+                        <button onclick="executeDeleteCategory(${id})" class="px-4 py-2 text-sm bg-red-600 hover:bg-red-500 text-white rounded-lg transition">確認刪除</button>
+                    </div>
+                </div>
+            `;
+            openModal("⚠️ 確認刪除物品類別", html);
+        }
+
+        async function executeDeleteCategory(idx) {
 			state.categories = state.categories.filter(c => c.id !== idx);
 			await deleteCategorieFromSupabase(idx)
             renderAll();
