@@ -754,8 +754,8 @@
                 <div class="flex justify-between items-center py-2 border-b border-slate-700 hover:bg-slate-800/50 px-2 rounded transition">
                     <span class="text-sm font-medium text-slate-200">🏢 ${room}</span>
                     <div class="flex space-x-2">
-                        <button onclick="editRoom('${room}')" class="text-blue-400 hover:text-blue-300 p-1 text-xs transition">編輯</button>
-                        <button onclick="deleteRoom('${room}')" class="text-red-400 hover:text-red-300 p-1 text-xs transition">移除</button>
+                        <button onclick="editRoom('${room}')" class="text-blue-400 hover:text-blue-300 truncate text-xs transition">編輯</button>
+                        <button onclick="deleteRoom('${room}')" class="text-red-400 hover:text-red-300 truncate text-xs transition">移除</button>
                     </div>
                 </div>
             `).join('');
@@ -876,8 +876,8 @@
                 <div class="flex justify-between items-center py-2 border-b border-slate-700 hover:bg-slate-800/50 px-2 rounded transition">
                     <span class="text-sm font-medium text-slate-200">📍 ${loc.room}：${loc.name}</span>
                     <div class="flex space-x-2">
-                        <button onclick="editLocation(${loc.id})" class="text-blue-400 hover:text-blue-300 p-1 text-xs transition">編輯</button>
-                        <button onclick="deleteLocation(${loc.id})" class="text-red-400 hover:text-red-300 p-1 text-xs transition">移除</button>
+                        <button onclick="editLocation(${loc.id})" class="text-blue-400 hover:text-blue-300 truncate text-xs transition">編輯</button>
+                        <button onclick="deleteLocation(${loc.id})" class="text-red-400 hover:text-red-300 truncate text-xs transition">移除</button>
                     </div>
                 </div>
             `}).join('');
@@ -1056,8 +1056,8 @@
                 <div class="flex justify-between items-center py-2 border-b border-slate-700 hover:bg-slate-800/50 px-2 rounded transition">
                     <span class="text-sm font-medium text-slate-200">📦 ${box.room}：${box.location}：${box.name}</span>
                     <div class="flex space-x-2">
-                        <button onclick="editBox(${box.id})" class="text-blue-400 hover:text-blue-300 p-1 text-xs transition">編輯</button>
-                        <button onclick="deleteBox(${box.id})" class="text-red-400 hover:text-red-300 p-1 text-xs transition">移除</button>
+                        <button onclick="editBox(${box.id})" class="text-blue-400 hover:text-blue-300 truncate text-xs transition">編輯</button>
+                        <button onclick="deleteBox(${box.id})" class="text-red-400 hover:text-red-300 truncate text-xs transition">移除</button>
                     </div>
                 </div>
             `}).join('');
@@ -1205,8 +1205,8 @@
 				<div class="flex justify-between items-center py-2 border-b border-slate-700 hover:bg-slate-800/50 px-2 rounded transition">
 					<span class="text-sm font-medium text-slate-200">🏷️ ${cat.cat_name}</span>
 					<div class="flex space-x-2">
-						<button onclick="editCategory(${cat.id})" class="text-blue-400 hover:text-blue-300 p-1 text-xs transition">編輯</button>
-						<button onclick="deleteCategory(${cat.id})" class="text-red-400 hover:text-red-300 p-1 text-xs transition">移除</button>
+						<button onclick="editCategory(${cat.id})" class="text-blue-400 hover:text-blue-300 truncate text-xs transition">編輯</button>
+						<button onclick="deleteCategory(${cat.id})" class="text-red-400 hover:text-red-300 truncate text-xs transition">移除</button>
 					</div>
 				</div>
 			`).join('');
