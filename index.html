@@ -19,7 +19,7 @@
     </style>
 	
 </head>
-<body class="bg-slate-900 min-h-screen text-slate-100 font-sans select-none">
+<body class="bg-slate-900 min-h-screen text-slate-100 font-sans">
     
     <!-- 側邊欄遮罩 (手機版) -->
     <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/60 z-30 hidden min-[840px]:hidden"></div>
@@ -117,16 +117,7 @@
                     </div>
                     
                     <div class="overflow-x-auto">
-                        <table class="w-full text-left table-fixed">
-							<colgroup>
-								<col class="w-[20%]"> 
-								<col class="w-[15%]">                
-								<col class="w-[15%]">                
-								<col class="w-[15%]">                
-								<col class="w-[10%]">   
-								<col class="w-[15%]">                
-								<col class="w-[10%]">               
-							</colgroup>
+                        <table class="w-full text-left">
                             <thead class="text-slate-400 border-b border-slate-700">
                                 <tr>
                                     <th class="pb-2 font-normal text-sm">名稱</th>
@@ -152,15 +143,15 @@
     </div>
 
     <!-- ==================== 浮動視窗 (Modal) 系統 ==================== -->
-    <div id="modalOverlay" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 hidden">
-        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl transition-all scale-95" id="modalContainer">
+    <div id="modalOverlay" class="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-3 hidden">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl transition-all scale-95 transform-gpu max-h-[80vh]" id="modalContainer">
             <!-- Modal Header -->
             <div class="px-6 py-4 border-b border-slate-700 flex justify-between items-center bg-slate-800/80">
                 <h3 id="modalTitle" class="text-lg font-bold text-slate-100">標題</h3>
                 <button onclick="closeActiveModal()" class="text-slate-400 hover:text-white text-2xl font-semibold focus:outline-none">&times;</button>
             </div>
             <!-- Modal Body -->
-            <div id="modalContent" class="p-6 max-h-[75vh] overflow-y-auto">
+            <div id="modalContent" class="p-6 flex-1 overflow-y-auto">
                 <!-- 動態注入的視窗內容 -->
             </div>
         </div>
@@ -319,7 +310,7 @@
                                 <details class="group/loc" ${isLocOpen ? 'open' : ''} ontoggle="updateGroupState('${fullLocStr}', this.open)">
                                     <summary class="${locSummaryBaseClass} ${locSummaryActiveStyle}">
                                         <span onclick="filterItems('exact', '${fullLocStr}', event)" class="flex-1 hover:text-blue-300 transition">📍 ${loc.name}</span>
-                                        <span class="text-xs text-slate-500 transition-transform group-open/loc:rotate-180 px-2">▼</span>
+                                        <span class="text-xs text-slate-500 transition-transform group-open/loc:rotate-180 px-3">▼</span>
                                     </summary>
                                     <ul class="pl-3 mt-1 space-y-1 border-l border-slate-700 ml-4">
                                         ${boxesHtml}
@@ -349,7 +340,7 @@
                     <details class="group" ${isRoomOpen ? 'open' : ''} ontoggle="updateGroupState('${groupName}', this.open)">
                         <summary class="${summaryBaseClass} ${summaryActiveStyle}">
                             <span onclick="filterItems('room', '${groupName}', event)" class="flex-1 hover:text-blue-300 transition">🏢 ${groupName}</span>
-                            <span class="text-sm text-slate-500 transition-transform group-open:rotate-180 px-2">▼</span>
+                            <span class="text-sm text-slate-500 transition-transform group-open:rotate-180 px-3">▼</span>
                         </summary>
                         <ul class="pl-3 mt-1 space-y-1 border-l border-slate-700 ml-4">
                             ${locationsHtml}
@@ -772,7 +763,7 @@
                         <input type="text" id="newRoomInput" placeholder="例如：三樓、地下室" class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 text-slate-200">
                         <button id="roomSubmitBtn" onclick="addOrUpdateRoom()" class="bg-blue-600 hover:bg-blue-500 text-white text-sm px-4 rounded-lg transition">新增</button>
                     </div>
-                    <div class="max-h-60 overflow-y-auto pr-2 overflow-x-hidden">
+                    <div class="max-h-80 overflow-y-auto pr-2 overflow-x-hidden">
                         ${listHtml}
                     </div>
                     <div class="pt-4 border-t border-slate-700 flex justify-end">
