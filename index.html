@@ -117,16 +117,16 @@
                     </div>
                     
                     <div class="overflow-x-auto">
-                        <table class="w-full text-left table-fixed">
+                        <table class="w-full text-left">
                             <thead class="text-slate-400 border-b border-slate-700">
                                 <tr>
-                                    <th class=" pb-1 font-normal text-sm">名稱</th>
-                                    <th class="w-[clamp(10px,8vw,80px)] pb-1 font-normal text-sm">類別</th>
-                                    <th class="w-[clamp(10px,12VW,200px)] pb-1 font-normal text-sm">位置</th>
-                                    <th class="w-[clamp(10px,8vw,90px)] pb-1 font-normal text-sm">容器</th>
-                                    <th class="w-[clamp(10px,8vw,90px)] pb-1 font-normal text-sm">數量</th>
-                                    <th class="w-[clamp(10px,8vw,120px)] pb-1 font-normal text-sm">日期</th>
-									<th class="w-[clamp(10px,8vw,60px)] pb-1 font-normal text-sm text-right">操作</th>
+                                    <th class="pb-2 font-normal text-sm">名稱</th>
+                                    <th class="pb-2 font-normal text-sm">類別</th>
+                                    <th class="pb-2 font-normal text-sm">位置</th>
+                                    <th class="pb-2 font-normal text-sm">容器</th>
+                                    <th class="pb-2 font-normal text-sm">數量</th>
+                                    <th class="pb-2 font-normal text-sm">日期</th>
+									<th class="pb-2 font-normal text-sm text-right">操作</th>
                                 </tr>
                             </thead>
                             <tbody id="inventoryTableBody" class="divide-y divide-slate-700">
@@ -475,6 +475,10 @@
                     <td class="px-0 py-1 ${expiryClass}">${expiryDisplay}</td>
                     <td class="px-0 py-1 text-right">
 						<div class="flex justify-end items-center space-x-1 h-full min-h-[30px]">
+							<button onclick="openRemarkModal(${item.id})" class="text-slate-400 hover:text-green-400 rounded hover:bg-slate-700/50 transition relative" title="備註">
+								<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                ${item.remark ? '<span class="absolute top-0 right-0 flex h-1.5 w-1.5"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span><span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-green-500"></span></span>' : ''}
+							</button>
 							<button onclick="openAddEditItemModal(${item.id})" class="text-slate-400 hover:text-blue-400 rounded hover:bg-slate-700/50 transition" title="編輯">
 								<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
 							</button>
@@ -595,7 +599,7 @@
             const currentLocs = state.locations.filter(l => l.home === state.currentHome && l.name !== 'null');
             const currentRooms = state.rooms[state.currentHome] || [];
             
-            let item = { name: '', category: state.categories[0]?.cat_name || '未分類', quantity: 1, expiry: '', box: '' };
+            let item = { name: '', category: state.categories[0]?.cat_name || '未分類', quantity: 1, expiry: '', box: '', remark: '' };
 			let itemRoom = "";
             let itemLocName = '';
             let itemBox = '';
@@ -683,6 +687,11 @@
                         </div>
                     </div>
 
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-1">備註 (可選)</label>
+                        <textarea id="formItemRemark" rows="3" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 text-slate-200 placeholder-slate-500" style="height: 100px;" placeholder="輸入物品相關備註...">${item.remark || ''}</textarea>
+                    </div>
+
                     <div class="pt-4 border-t border-slate-700 flex justify-end space-x-3">
                         <button type="button" onclick="closeActiveModal()" class="px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 rounded-lg transition">取消</button>
                         <button type="submit" class="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition">${isEdit ? '更新保存' : '確認新增'}</button>
@@ -702,6 +711,7 @@
             const room = document.getElementById('formItemRoom').value;
             const locName = document.getElementById('formItemLocationName').value;
             const boxName = document.getElementById('formItemBoxName').value || '';
+            const remark = document.getElementById('formItemRemark').value || '';
             
             if (!room || !locName) {
                 alert("請確保已選擇存放位置");
@@ -714,7 +724,7 @@
                     id: Date.now(),
                     category, name, quantity, 
 					home: state.currentHome, room, location: locName, box: boxName,
-					expiry
+					expiry, remark
                 };
                 state.items.push(newItem);
                 const { error } = await db.from('StoreHouse_Items').insert([newItem]);
@@ -723,8 +733,8 @@
                 // 編輯更新
                 const index = state.items.findIndex(i => i.id === itemId);
                 if (index !== -1) {
-                    state.items[index] = { ...state.items[index], name, category, room, location: locName, box: boxName, quantity, expiry };
-                    const { error } = await db.from('StoreHouse_Items').update({ name, category, room, location: locName, box: boxName, quantity, expiry }).eq('id', itemId);
+                    state.items[index] = { ...state.items[index], name, category, room, location: locName, box: boxName, quantity, expiry, remark };
+                    const { error } = await db.from('StoreHouse_Items').update({ name, category, room, location: locName, box: boxName, quantity, expiry, remark }).eq('id', itemId);
 					if (error) console.error("更新物品失敗:", error);
                 }
             }
@@ -1436,6 +1446,41 @@
             await db.from('StoreHouse_Items').delete().eq('id', itemId);
             closeActiveModal();
             renderAll();
+        }
+
+        // --- 功能 E: 編輯物品備註 Modal ---
+        function openRemarkModal(itemId) {
+            const item = state.items.find(i => i.id === itemId);
+            if (!item) return;
+
+            const html = `
+                <form id="remarkForm" onsubmit="saveOnlyRemark(event, ${itemId})" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">「${item.name}」的備註資訊</label>
+                        <textarea id="modalOnlyRemark" rows="6" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-500 text-slate-200 placeholder-slate-500" style="height: 200px;" placeholder="在此輸入多行備註...">${item.remark || ''}</textarea>
+                    </div>
+                    <div class="pt-4 border-t border-slate-700 flex justify-end space-x-3">
+                        <button type="button" onclick="closeActiveModal()" class="px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 rounded-lg transition">取消</button>
+                        <button type="submit" class="px-4 py-2 text-sm bg-green-600 hover:bg-green-500 text-white rounded-lg transition shadow-md shadow-green-900/30">儲存備註</button>
+                    </div>
+                </form>
+            `;
+            openModal("📝 物品備註", html);
+        }
+
+        async function saveOnlyRemark(event, itemId) {
+            event.preventDefault();
+            const remark = document.getElementById('modalOnlyRemark').value;
+            
+            const index = state.items.findIndex(i => i.id === itemId);
+            if (index !== -1) {
+                state.items[index].remark = remark;
+                const { error } = await db.from('StoreHouse_Items').update({ remark }).eq('id', itemId);
+                if (error) console.error("更新備註失敗:", error);
+            }
+            
+            closeActiveModal();
+            renderTable(); 
         }
     </script>
 </body>
