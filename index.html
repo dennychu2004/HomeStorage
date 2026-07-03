@@ -29,7 +29,11 @@
         <!-- 左側導覽列 -->
         <aside id="sidebar" class="w-64 bg-slate-800 border-r border-slate-700 flex-shrink-0 flex flex-col fixed inset-y-0 left-0 z-40 transform -translate-x-full min-[840px]:relative min-[840px]:translate-x-0 transition-transform duration-300 ease-in-out">
             <div class="px-3 py-3">
-                <h1 class="text-xl font-bold text-blue-400 mb-4">🏠 朱家倉儲</h1>
+                <h1 class="text-xl font-bold text-blue-400 mb-4">
+				<a href="https://dennychu2004.github.io/HomeStorage/" class="text-inherit no-underline hover:no-underline cursor-pointer">
+				🏠 朱家倉儲
+				</a>
+				</h1>
                 
                 <div class="mb-5">
                     <label class="text-xs text-slate-500 mb-2 block">切換住家</label>
@@ -50,10 +54,10 @@
 
                 <div>
                     <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">系統設定</h3>
-                    <button onclick="openManageRoomsModal()" class="w-full text-left block px-3 py-0.5 rounded-lg hover:bg-slate-700 transition mb-1 text-slate-300 text-sm">自訂樓層房間</button>
-                    <button onclick="openManageLocationsModal()" class="w-full text-left block px-3 py-0.5 rounded-lg hover:bg-slate-700 transition mb-1 text-slate-300 text-sm">自訂存放位置</button>
-                    <button onclick="openManageBoxesModal()" class="w-full text-left block px-3 py-0.5 rounded-lg hover:bg-slate-700 transition mb-1 text-slate-300 text-sm">自訂容器項目</button>
-                    <button onclick="openManageCategoriesModal()" class="w-full text-left block px-3 py-0.5 rounded-lg hover:bg-slate-700 transition text-slate-300 text-sm">自訂物品類別</button>
+                    <button onclick="openManageRoomsModal()" class="w-full text-left block px-3 py-0.5 rounded-lg hover:bg-slate-700 transition mb-1 text-slate-300 text-sm">🏢 自訂樓層房間</button>
+                    <button onclick="openManageLocationsModal()" class="w-full text-left block px-3 py-0.5 rounded-lg hover:bg-slate-700 transition mb-1 text-slate-300 text-sm">📍 自訂存放位置</button>
+                    <button onclick="openManageBoxesModal()" class="w-full text-left block px-3 py-0.5 rounded-lg hover:bg-slate-700 transition mb-1 text-slate-300 text-sm">📦 自訂容器項目</button>
+                    <button onclick="openManageCategoriesModal()" class="w-full text-left block px-3 py-0.5 rounded-lg hover:bg-slate-700 transition text-slate-300 text-sm">🏷️ 自訂物品類別</button>
                 </div>
             </nav>
         </aside>
@@ -85,11 +89,11 @@
                         <h2 id="totalItemsDisplay" class="text-3xl font-bold mt-1 text-blue-400">0 <span class="text-base font-normal text-slate-300">件</span></h2>
                     </div>
                     <div class="bg-slate-800 py-1 px-5 rounded-2xl border border-slate-700 shadow-lg">
-                        <p class="text-slate-400 text-sm">即將到期 (30天內)</p>
+                        <p class="text-slate-400 text-sm">即將到期 (10天內)</p>
                         <h2 id="expiringDisplay" class="text-3xl font-bold text-orange-400 mt-1">0 <span class="text-base font-normal text-slate-300">件</span></h2>
                     </div>
                     <div class="bg-slate-800 py-1 px-5 rounded-2xl border border-slate-700 shadow-lg">
-                        <p class="text-slate-400 text-sm">低庫存警示</p>
+                        <p class="text-slate-400 text-sm">已經過期</p>
                         <h2 id="lowStockDisplay" class="text-3xl font-bold text-red-400 mt-1">0 <span class="text-base font-normal text-slate-300">件</span></h2>
                     </div>
                 </section>
@@ -121,12 +125,12 @@
                             <thead class="text-slate-400 border-b border-slate-700">
                                 <tr>
                                     <th class=" pb-2 font-normal text-sm">名稱</th>
-                                    <th class="w-[clamp(10px,8vw,220px)]  pb-2 font-normal text-sm">類別</th>
-                                    <th class="w-[clamp(10px,16VW,220px)] pb-2 font-normal text-sm">位置</th>
-                                    <th class="w-[clamp(10px,8vw,220px)]  pb-2 font-normal text-sm">容器</th>
-                                    <th class="w-[clamp(10px,8vw,140px)]  pb-2 font-normal text-sm">數量</th>
-                                    <th class="w-[clamp(10px,8vw,140px)]  pb-2 font-normal text-sm">日期</th>
-									<th class="w-[clamp(10px,8vw,90px)]   pb-2 font-normal text-sm text-right">操作</th>
+                                    <th class="w-[clamp(10px,8vw,220px)]  px-0 pb-2 font-normal text-sm">類別</th>
+                                    <th class="w-[clamp(10px,16VW,220px)] px-0 pb-2 font-normal text-sm">位置</th>
+                                    <th class="w-[clamp(10px,8vw,220px)]  px-0 pb-2 font-normal text-sm">容器</th>
+                                    <th class="w-[clamp(10px,8vw,140px)]  px-0 pb-2 font-normal text-sm">數量</th>
+                                    <th class="w-[clamp(10px,8vw,140px)]  px-0 pb-2 font-normal text-sm">日期</th>
+									<th class="w-[clamp(10px,8vw,90px)]   px-0 pb-2 font-normal text-sm text-right">操作</th>
                                 </tr>
                             </thead>
                             <tbody id="inventoryTableBody" class="divide-y divide-slate-700">
@@ -311,7 +315,7 @@
                                 <details class="group/loc" ${isLocOpen ? 'open' : ''} ontoggle="updateGroupState('${fullLocStr}', this.open)">
                                     <summary class="${locSummaryBaseClass} ${locSummaryActiveStyle}">
                                         <span onclick="filterItems('exact', '${fullLocStr}', event)" class="flex-1 hover:text-blue-300 transition">📍 ${loc.name}</span>
-                                        <span class="text-xs text-slate-500 transition-transform group-open/loc:rotate-180 pl-6 pr-3">▼</span>
+                                        <span class="text-xs text-slate-500 transition-transform group-open/loc:rotate-180 px-3">▼</span>
                                     </summary>
                                     <ul class="pl-3 mt-1 space-y-1 border-l border-slate-700 ml-4">
                                         ${boxesHtml}
@@ -340,7 +344,7 @@
                     <details class="group" ${isRoomOpen ? 'open' : ''} ontoggle="updateGroupState('${groupName}', this.open)">
                         <summary class="${summaryBaseClass} ${summaryActiveStyle}">
                             <span onclick="filterItems('room', '${groupName}', event)" class="flex-1 hover:text-blue-300 transition">🏢 ${groupName}</span>
-                            <span class="text-sm text-slate-500 transition-transform group-open:rotate-180 pl-6 pr-3">▼</span>
+                            <span class="text-sm text-slate-500 transition-transform group-open:rotate-180 px-3">▼</span>
                         </summary>
                         <ul class="pl-3 mt-1 space-y-1 border-l border-slate-700 ml-4">
                             ${locationsHtml}
@@ -373,18 +377,32 @@
             document.getElementById('totalItemsDisplay').innerHTML = `${totalItems} <span class="text-base font-normal text-slate-300">件</span>`;
 
             const today = new Date();
+			today.setHours(0, 0, 0, 0);
+			
             const limitDate = new Date();
-            limitDate.setDate(today.getDate() + 30);
+            limitDate.setDate(today.getDate() + 10);
 
-            const expiringCount = currentItems.filter(item => {
+            const expiringCount1 = currentItems.filter(item => {
                 if (!item.expiry) return false;
+				
                 const expDate = new Date(item.expiry);
+				expDate.setHours(0, 0, 0, 0); // 也將目標日期設為 00:00:00
+				
                 return expDate >= today && expDate <= limitDate;
             }).length;
-            document.getElementById('expiringDisplay').innerHTML = `${expiringCount} <span class="text-base font-normal text-slate-300">件</span>`;
+            document.getElementById('expiringDisplay').innerHTML = `${expiringCount1} <span class="text-base font-normal text-slate-300">件</span>`;
 
-            const lowStockCount = currentItems.filter(item => item.quantity <= 1).length;
-            document.getElementById('lowStockDisplay').innerHTML = `${lowStockCount} <span class="text-base font-normal text-slate-300">件</span>`;
+            //const lowStockCount = currentItems.filter(item => item.quantity <= 1).length;
+			
+            const expiringCount2 = currentItems.filter(item => {
+                if (!item.expiry) return false;
+				
+                const expDate = new Date(item.expiry);
+				expDate.setHours(0, 0, 0, 0); // 也將目標日期設為 00:00:00
+				
+                return expDate < today;
+            }).length;
+            document.getElementById('lowStockDisplay').innerHTML = `${expiringCount2} <span class="text-base font-normal text-slate-300">件</span>`;
         }
 
         // --- 4. 庫存表格資料渲染 (核心篩選引擎) ---
@@ -456,10 +474,10 @@
                     const expDate = new Date(item.expiry);
                     const daysLeft = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));
                     if (daysLeft < 0) {
-                        expiryDisplay = `${item.expiry.slice(2)}`;
+                        expiryDisplay = `${item.expiry.slice(5)}`;
                         expiryClass = "text-red-500 font-semibold text-sm";
-                    } else if (daysLeft <= 30) {
-                        expiryDisplay = `${item.expiry.slice(2)}`;
+                    } else if (daysLeft <= 10) {
+                        expiryDisplay = `${item.expiry.slice(5)}`;
                         expiryClass = "text-orange-400 font-semibold text-sm";
                     } else {
                         expiryClass = "text-emerald-400 text-sm";
@@ -486,7 +504,7 @@
                     <td class="px-0 py-1 ${qtyClass}">${qtyDisplay}</td>
                     <td class="px-0 py-1 ${expiryClass}">${expiryDisplay}</td>
                     <td class="px-0 py-1 text-right">
-						<div class="flex justify-end items-center space-x-1 h-full min-h-[30px]">
+						<div class="flex justify-end items-center space-x-0.5 h-full min-h-[30px]">
 							<button onclick="openRemarkModal(${item.id})" class="text-slate-400 hover:text-green-400 rounded hover:bg-slate-700/50 transition relative" title="備註">
 								<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                                 ${item.remark ? '<span class="absolute top-0 right-0 flex h-1.5 w-1.5"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span><span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-green-500"></span></span>' : ''}
@@ -756,7 +774,7 @@
         }
 
         // ==========================================
-        // 功能 B0: 自訂樓層房間管理
+        // 功能 B0: 自訂樓層房間
         // ==========================================
         let editingRoomName = null;
 
@@ -793,7 +811,7 @@
                     </div>
                 </div>
             `;
-            openModal(`🏢 自訂樓層房間管理 - ${state.currentHome}`, html);
+            openModal(`🏢 自訂樓層房間 - ${state.currentHome}`, html);
         }
 
         function editRoom(roomName) {
@@ -889,7 +907,7 @@
 
 
         // ==========================================
-        // 功能 B: 自訂存放位置管理
+        // 功能 B: 自訂存放位置
         // ==========================================
         let editingLocGlobalIdx = -1;
 
@@ -957,7 +975,7 @@
                     </div>
                 </div>
             `;
-            openModal(`📂 自訂存放位置管理 - ${state.currentHome}`, html);
+            openModal(`📂 自訂存放位置 - ${state.currentHome}`, html);
             updateLocationModalList();
         }
 
@@ -1076,7 +1094,7 @@
 		}
 
         // ==========================================
-        // 功能 B2: 自訂容器項目管理
+        // 功能 B2: 自訂容器項目
         // ==========================================
         let editingBoxGlobalIdx = -1;
 
@@ -1193,7 +1211,7 @@
                     </div>
                 </div>
             `;
-            openModal(`📦 自訂容器管理 - ${state.currentHome}`, html);
+            openModal(`📦 自訂容器項目 - ${state.currentHome}`, html);
             updateBoxModalList(); // 避免用 SelectAndList 重置已帶入的值
         }
 
@@ -1311,7 +1329,7 @@
 
 
         // ==========================================
-        // 功能 C: 自訂物品類別管理 
+        // 功能 C: 自訂物品類別
         // ==========================================
         let editingCatIdx = -1;
 
@@ -1345,7 +1363,7 @@
                     </div>
                 </div>
             `;
-            openModal("🏷️ 自訂物品類別管理", html);
+            openModal("🏷️ 自訂物品類別", html);
         }
 
         function editCategory(idx) {
