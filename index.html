@@ -120,13 +120,13 @@
                         <table class="w-full text-left">
                             <thead class="text-slate-400 border-b border-slate-700">
                                 <tr>
-                                    <th class="pb-2 font-normal text-sm">名稱</th>
-                                    <th class="pb-2 font-normal text-sm">類別</th>
-                                    <th class="pb-2 font-normal text-sm">位置</th>
-                                    <th class="pb-2 font-normal text-sm">容器</th>
-                                    <th class="pb-2 font-normal text-sm">數量</th>
-                                    <th class="pb-2 font-normal text-sm">日期</th>
-									<th class="pb-2 font-normal text-sm text-right">操作</th>
+                                    <th class=" pb-2 font-normal text-sm">名稱</th>
+                                    <th class="w-[clamp(10px,10vw,200px)]   pb-2 font-normal text-sm">類別</th>
+                                    <th class="w-[clamp(10px,16VW,200px)] pb-2 font-normal text-sm">位置</th>
+                                    <th class="w-[clamp(10px,10vw,200px)]   pb-2 font-normal text-sm">容器</th>
+                                    <th class="w-[clamp(10px,8vw,120px)]   pb-2 font-normal text-sm">數量</th>
+                                    <th class="w-[clamp(10px,8vw,120px)]  pb-2 font-normal text-sm">日期</th>
+									<th class="w-[clamp(10px,8vw,90px)]   pb-2 font-normal text-sm text-right">操作</th>
                                 </tr>
                             </thead>
                             <tbody id="inventoryTableBody" class="divide-y divide-slate-700">
@@ -467,7 +467,7 @@
                 }
 
                 tr.innerHTML = `
-                    <td class="px-0 py-1 font-medium text-slate-100 text-sm">${item.name}</td>
+                    <td class="px-0 py-1 font-medium text-slate-100 text-sm line-clamp-2" onclick="this.classList.toggle('line-clamp-2')">${item.name}</td>
                     <td class="px-0 py-1 text-slate-400 text-sm">${item.category}</td>
                     <td class="px-0 py-1 text-slate-400 text-sm">${item.room}：${item.location}</td>
                     <td class="px-0 py-1 text-blue-300 text-sm">${item.box || '-'}</td>
