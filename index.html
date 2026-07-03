@@ -468,13 +468,21 @@
 
                 tr.innerHTML = `
 					<td class="px-0 py-1 font-medium text-slate-100 text-sm items-center">
-					  <div class="line-clamp-2"  onclick="this.classList.toggle('line-clamp-2')">
+					  <div class="line-clamp-2" onclick="this.classList.toggle('line-clamp-2')">
 						${item.name}
 					  </div>
 					</td>
                     <td class="px-0 py-1 text-slate-400 text-sm">${item.category}</td>
-                    <td class="px-0 py-1 text-slate-400 text-sm">${item.room}：${item.location}</td>
-                    <td class="px-0 py-1 text-blue-300 text-sm">${item.box || '-'}</td>
+                    <td class="px-0 py-1 text-slate-400 text-sm">
+						<div class="line-clamp-2" onclick="this.classList.toggle('line-clamp-2')">
+							${item.room}：${item.location}
+						</div>
+					</td>
+                    <td class="px-0 py-1 text-blue-300 text-sm  items-center">
+						<div class="line-clamp-2" onclick="this.classList.toggle('line-clamp-2')">
+							${item.box || '-'}
+						</div>
+					</td>
                     <td class="px-0 py-1 ${qtyClass}">${qtyDisplay}</td>
                     <td class="px-0 py-1 ${expiryClass}">${expiryDisplay}</td>
                     <td class="px-0 py-1 text-right">
