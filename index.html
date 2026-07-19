@@ -913,7 +913,7 @@
             const row = document.createElement('div');
             row.className = 'flex gap-2 items-center batch-item-row bg-slate-800 p-1 rounded-lg border border-slate-700/50';
             row.innerHTML = `
-                <input type="text" placeholder="物品名稱 (必填)" required class="batch-item-name flex-1 bg-slate-900 border border-slate-600 rounded-md px-3 py-1 text-sm focus:outline-none focus:border-emerald-500 text-slate-100">
+                <input type="text" placeholder="物品名稱 (必填)" required class="batch-item-name flex-1 bg-slate-900 border border-slate-600 rounded-md px-3 py-1 text-sm focus:outline-none focus:border-emerald-500 text-slate-100 min-w-0">
                 <input type="number" placeholder="數量" required min="1" value="1" class="batch-item-qty w-12 bg-slate-900 border border-slate-600 rounded-md pl-3 py-1 text-sm focus:outline-none focus:border-emerald-500 text-slate-100">
                 <button type="button" onclick="this.parentElement.remove()" class="text-slate-500 hover:text-red-400 p-1 transition rounded-md hover:bg-slate-700" title="移除此行">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
