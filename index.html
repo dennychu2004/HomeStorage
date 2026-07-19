@@ -55,7 +55,7 @@
                 <div>
                     <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">系統設定</h3>
                     <button onclick="openManageRoomsModal()" class="w-full text-left block px-3 py-0.5 rounded-lg hover:bg-slate-700 transition mb-1 text-slate-300 text-sm">🏢 自訂樓層房間</button>
-                    <button onclick="openManageLocationsModal()" class="w-full text-left block px-3 py-0.5 rounded-lg hover:bg-slate-700 transition mb-1 text-slate-300 text-sm">📍 自訂存放位置</button>
+                    <button onclick="openManageLocationsModal()" class="w-full text-left block px-3 py-0.5 rounded-lg hover:bg-slate-700 transition mb-1 text-slate-300 text-sm">📌 自訂存放位置</button>
                     <button onclick="openManageBoxesModal()" class="w-full text-left block px-3 py-0.5 rounded-lg hover:bg-slate-700 transition mb-1 text-slate-300 text-sm">📦 自訂容器項目</button>
                     <button onclick="openManageCategoriesModal()" class="w-full text-left block px-3 py-0.5 rounded-lg hover:bg-slate-700 transition text-slate-300 text-sm">🏷️ 自訂物品類別</button>
                 </div>
@@ -130,9 +130,12 @@
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="text-lg font-bold flex items-center">
                             庫存明細
-                            <span id="activeFilterBadge" class="ml-3 px-2.5 py-0.5 rounded-full text-sm font-semibold bg-blue-900/50 text-blue-300 hidden"></span>
+                            <span id="activeFilterBadge" class="ml-3 px-2.5 py-1 rounded-lg text-sm font-semibold bg-blue-900/50 text-blue-300 hidden"></span>
                         </h3>
-                        <button onclick="openAddEditItemModal()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg transition text-sm font-medium shadow-md shadow-blue-900/30">+ 新增物品</button>
+                        <div class="flex gap-2">
+                            <button onclick="openBatchAddItemModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1 rounded-lg transition text-sm font-semibold shadow-md shadow-emerald-900/30">⊞ 批量</button>
+                            <button onclick="openAddEditItemModal()" class="bg-blue-600 hover:bg-blue-500 text-white px-2.5 py-1 rounded-lg transition text-sm font-semibold shadow-md shadow-blue-900/30">+ 新增</button>
+                        </div>
                     </div>
                     
                     <div class="overflow-x-auto">
@@ -165,7 +168,7 @@
     <div id="modalOverlay" class="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-3 hidden">
         <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl transition-all scale-95 transform-gpu max-h-[84vh] flex flex-col" id="modalContainer">
             <!-- Modal Header -->
-            <div class="px-6 py-4 border-b border-slate-700 flex justify-between items-center bg-slate-800/80 shrink-0">
+            <div class="px-6 py-3 border-b border-slate-700 flex justify-between items-center bg-slate-800/80 shrink-0">
                 <h3 id="modalTitle" class="text-lg font-bold text-slate-100">標題</h3>
                 <button onclick="closeActiveModal()" class="text-slate-400 hover:text-white text-2xl font-semibold focus:outline-none">&times;</button>
             </div>
@@ -329,7 +332,7 @@
                             <li>
                                 <details class="group/loc" ${isLocOpen ? 'open' : ''} ontoggle="updateGroupState('${fullLocStr}', this.open)">
                                     <summary class="${locSummaryBaseClass} ${locSummaryActiveStyle}">
-                                        <span onclick="filterItems('exact', '${fullLocStr}', event)" class="flex-1 hover:text-blue-300 transition">📍 ${loc.name}</span>
+                                        <span onclick="filterItems('exact', '${fullLocStr}', event)" class="flex-1 hover:text-blue-300 transition">📌 ${loc.name}</span>
                                         <span class="text-xs text-slate-500 transition-transform group-open/loc:rotate-180 px-3">▼</span>
                                     </summary>
                                     <ul class="pl-3 mt-1 space-y-1 border-l border-slate-700 ml-4">
@@ -342,7 +345,7 @@
                         locationsHtml += `
                             <li>
                                 <button onclick="filterItems('exact', '${fullLocStr}', event)" class="w-full text-left block pl-2 pr-3 py-0.5 text-sm rounded transition ${isLocSelected ? 'text-blue-400 font-semibold bg-slate-700/50' : 'text-slate-300 hover:text-white hover:bg-slate-700/30'}">
-                                    📍 ${loc.name}
+                                    📌 ${loc.name}
                                 </button>
                             </li>
                         `;
@@ -788,6 +791,197 @@
             renderAll();
         }
 
+        // --- 功能 A-2: 批量新增物品 Modal ---
+        window.updateBatchModalLocationOptions = function() {
+            const selectedRoom = document.getElementById('batchItemRoom').value;
+            const locSelect = document.getElementById('batchItemLocationName');
+            const validLocs = state.locations.filter(l => l.home === state.currentHome && l.room === selectedRoom && l.name !== 'null');
+            
+            if (validLocs.length > 0) {
+                locSelect.innerHTML = validLocs.map(l => `<option value="${l.name}">${l.name}</option>`).join('');
+                locSelect.disabled = false;
+            } else {
+                locSelect.innerHTML = '<option value="" disabled selected>該樓層無存放位置</option>';
+                locSelect.disabled = true;
+            }
+            updateBatchModalBoxOptions();
+        }
+
+        window.updateBatchModalBoxOptions = function() {
+            const selectedRoom = document.getElementById('batchItemRoom').value;
+            const selectedLoc = document.getElementById('batchItemLocationName').value;
+            const boxSelect = document.getElementById('batchItemBoxName');
+            const validBoxes = state.boxes.filter(b => b.home === state.currentHome && b.room === selectedRoom && b.location === selectedLoc);
+            
+            let html = '<option value="">無容器 (不指定)</option>';
+            if (validBoxes.length > 0) {
+                html += validBoxes.map(b => `<option value="${b.name}">${b.name}</option>`).join('');
+                boxSelect.disabled = false;
+            } else {
+                boxSelect.disabled = true;
+            }
+            boxSelect.innerHTML = html;
+        }
+
+        function openBatchAddItemModal() {
+            const currentLocs = state.locations.filter(l => l.home === state.currentHome && l.name !== 'null');
+            const currentRooms = state.rooms[state.currentHome] || [];
+            
+            let itemRoom = "";
+            let itemLocName = '';
+            let itemBox = '';
+
+            // 自動帶入目前篩選條件
+            if(currentRooms.length > 0) {
+                if(state.filterValue != null && state.filterValue != "") {
+                    itemRoom = state.filterValue.includes('：') ? state.filterValue.split('：')[0] : state.filterValue;
+                } else {
+                    itemRoom = currentRooms[0];
+                }
+            }
+
+            const locsInRoom = currentLocs.filter(l => l.room === itemRoom);
+            if (locsInRoom.length > 0) {
+                if(state.filterValue != null && state.filterValue != "") {
+                    let parts = state.filterValue.split('：');
+                    itemLocName = parts.length > 1 ? parts[1] : locsInRoom[0].name;
+                    if(parts.length > 2) itemBox = parts[2];
+                } else {
+                    itemLocName = locsInRoom[0].name;
+                }
+            }
+
+            const roomOptions = currentRooms.map(r => `<option value="${r}" ${itemRoom === r ? 'selected' : ''}>${r}</option>`).join('');
+            const validLocs = currentLocs.filter(l => l.room === itemRoom);
+            const locOptions = validLocs.map(l => `<option value="${l.name}" ${itemLocName === l.name ? 'selected' : ''}>${l.name}</option>`).join('');
+            const validBoxes = state.boxes.filter(b => b.home === state.currentHome && b.room === itemRoom && b.location === itemLocName);
+            let boxOptions = `<option value="">無容器 (不指定)</option>` + validBoxes.map(b => `<option value="${b.name}" ${itemBox === b.name ? 'selected' : ''}>${b.name}</option>`).join('');
+
+            const html = `
+                <form id="batchItemForm" onsubmit="saveBatchItems(event)" class="space-y-4 flex flex-col h-full max-h-[70vh]">
+                    <!-- 上方共用設定區 -->
+                    <div class="shrink-0 bg-slate-900/50 p-3 rounded-xl border border-slate-700 space-y-3">
+                         <!-- <div class="text-sm font-semibold text-emerald-400 mb-1 border-b border-slate-700 pb-2">共用存放設定</div> -->
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium text-slate-400 mb-1">樓層房間</label>
+                                <select id="batchItemRoom" onchange="updateBatchModalLocationOptions()" required class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 text-slate-200">
+                                    ${roomOptions || '<option value="" disabled selected>請先自訂樓層</option>'}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-400 mb-1">存放位置</label>
+                                <select id="batchItemLocationName" onchange="updateBatchModalBoxOptions()" required class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 text-slate-200">
+                                    ${locOptions || '<option value="" disabled selected>該樓層無存放位置</option>'}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-400 mb-1">容器 (選填)</label>
+                                <select id="batchItemBoxName" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 text-slate-200" ${validBoxes.length === 0 ? 'disabled' : ''}>
+                                    ${boxOptions}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 下方明細輸入區 -->
+                    <div class="flex-1 overflow-hidden flex flex-col min-h-[220px]">
+                        <div class="flex justify-between items-end mb-2 shrink-0">
+                            <label class="block text-sm font-medium text-slate-300">輸入物品明細 (免填有效期限/備註)</label>
+                            <button type="button" onclick="addBatchRow()" class="text-xs bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded-lg transition shadow-md">+ 增加行數</button>
+                        </div>
+                        <div id="batchRowsContainer" class="space-y-1 overflow-y-auto pb-2 flex-1 max-h-[340px]">
+                            <!-- 存放動態產生的輸入列 -->
+                        </div>
+                    </div>
+
+                    <div class="pt-4 border-t border-slate-700 flex justify-end space-x-3 shrink-0">
+                        <button type="button" onclick="closeActiveModal()" class="px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 rounded-lg transition">取消</button>
+                        <button type="submit" class="px-4 py-2 text-sm bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition shadow-md shadow-emerald-900/30">批量新增</button>
+                    </div>
+                </form>
+            `;
+            openModal("⊞ 批量新增物資品項", html);
+            
+            // 開啟時預設提供 3 行供輸入
+            addBatchRow();
+            addBatchRow();
+            addBatchRow();
+        }
+
+        window.addBatchRow = function() {
+            const container = document.getElementById('batchRowsContainer');
+            const row = document.createElement('div');
+            row.className = 'flex gap-2 items-center batch-item-row bg-slate-800 p-1 rounded-lg border border-slate-700/50';
+            row.innerHTML = `
+                <input type="text" placeholder="物品名稱 (必填)" required class="batch-item-name flex-1 bg-slate-900 border border-slate-600 rounded-md px-3 py-1 text-sm focus:outline-none focus:border-emerald-500 text-slate-100">
+                <input type="number" placeholder="數量" required min="1" value="1" class="batch-item-qty w-24 bg-slate-900 border border-slate-600 rounded-md px-3 py-1 text-sm focus:outline-none focus:border-emerald-500 text-slate-100">
+                <button type="button" onclick="this.parentElement.remove()" class="text-slate-500 hover:text-red-400 p-1 transition rounded-md hover:bg-slate-700" title="移除此行">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            `;
+            container.appendChild(row);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        async function saveBatchItems(event) {
+            event.preventDefault();
+            const room = document.getElementById('batchItemRoom').value;
+            const locName = document.getElementById('batchItemLocationName').value;
+            const boxName = document.getElementById('batchItemBoxName').value || '';
+
+            if (!room || !locName) {
+                alert("請確保已選擇存放位置");
+                return;
+            }
+
+            const rows = document.querySelectorAll('.batch-item-row');
+            const newItems = [];
+            // 類別先預設為最上方第一個，或為「未分類」
+            const defaultCategory = state.categories.length > 0 ? state.categories[0].cat_name : '未分類';
+            let baseId = Date.now();
+
+            rows.forEach(row => {
+                const nameInput = row.querySelector('.batch-item-name');
+                const qtyInput = row.querySelector('.batch-item-qty');
+                const name = nameInput.value.trim();
+                const quantity = parseInt(qtyInput.value, 10);
+
+                if (name) {
+                    newItems.push({
+                        id: baseId++, // 利用遞增確保當前迴圈每筆 ID 獨立
+                        category: defaultCategory,
+                        name: name,
+                        quantity: quantity,
+                        home: state.currentHome,
+                        room: room,
+                        location: locName,
+                        box: boxName,
+                        expiry: null, // 按需求：有效期限預設空白
+                        remark: ''    // 按需求：備註預設空白
+                    });
+                }
+            });
+
+            if (newItems.length === 0) {
+                alert("請至少完整填寫一項物品名稱！");
+                return;
+            }
+
+            // 同步加入本地陣列
+            state.items.push(...newItems);
+
+            // 批量發送至 Supabase (支援傳入 Array)
+            const { error } = await db.from('StoreHouse_Items').insert(newItems);
+            if (error) {
+                console.error("批量新增物品失敗:", error);
+                alert("批量新增時發生錯誤，請檢查主控台資訊。");
+            }
+
+            closeActiveModal();
+            renderAll();
+        }
+
         // ==========================================
         // 功能 B0: 自訂樓層房間
         // ==========================================
@@ -938,7 +1132,7 @@
             let listHtml = currentLocs.map((loc) => {
                 return `
                 <div class="flex justify-between items-center py-2 border-b border-slate-700 hover:bg-slate-800/50 px-2 rounded transition">
-                    <span class="text-sm font-medium text-slate-200">📍 ${loc.room}：${loc.name}</span>
+                    <span class="text-sm font-medium text-slate-200">📌 ${loc.room}：${loc.name}</span>
                     <div class="flex space-x-2">
                         <button onclick="editLocation(${loc.id})" class="text-blue-400 hover:text-blue-300 truncate text-xs transition">編輯</button>
                         <button onclick="confirmDeleteLocation(${loc.id})" class="text-red-400 hover:text-red-300 truncate text-xs transition">移除</button>
@@ -1578,7 +1772,7 @@
                     <div class="flex justify-between items-center py-1 border-b border-slate-700 hover:bg-slate-800/50 px-2 rounded transition">
                         <div>
                             <div class="text-sm font-medium text-slate-200">${item.name}</div>
-                            <div class="text-xs text-slate-400 mt-1">📍 ${item.room}：${item.location} ${item.box ? `📦 ${item.box}` : ''}</div>
+                            <div class="text-xs text-slate-400 mt-1">📌 ${item.room}：${item.location} ${item.box ? `📦 ${item.box}` : ''}</div>
                         </div>
                         <div class="text-right flex flex-col justify-center">
                             <div class="text-sm font-bold ${colorClass}">${item.expiry}</div>
