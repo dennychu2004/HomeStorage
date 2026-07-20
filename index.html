@@ -7,6 +7,8 @@
 	
     <script src="https://cdn.tailwindcss.com"></script>
 	<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
 	
     <style>
         ::-webkit-scrollbar { width: 8px; }
@@ -132,8 +134,9 @@
                             <span id="activeFilterBadge" class="px-2.5 py-1 rounded-lg text-sm font-semibold bg-blue-900/50 text-white hidden"></span>
                         </h3>
                         <div class="flex gap-2">
-                            <button onclick="openBatchAddItemModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1 rounded-lg transition text-sm font-semibold shadow-md shadow-emerald-900/30">⊞ 批量</button>
-                            <button onclick="openAddEditItemModal()" class="bg-blue-600 hover:bg-blue-500 text-white px-2.5 py-1 rounded-lg transition text-sm font-semibold shadow-md shadow-blue-900/30">+ 新增</button>
+                            <button onclick="openBatchAddItemModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1 rounded-lg transition text-sm font-semibold shadow-md shadow-emerald-900/30">🗂️ 批量</button>
+                            <button onclick="openAddEditItemModal()" class="bg-blue-600 hover:bg-blue-500 text-white px-2.5 py-1 rounded-lg transition text-sm font-semibold shadow-md shadow-blue-900/30">🔖 新增</button>
+								
                         </div>
                     </div>
                     
@@ -180,6 +183,8 @@
 
     <!-- ==================== JavaScript 全邏輯 ==================== -->
     <script>
+		lucide.createIcons();
+		
 		const supabaseUrl = 'https://horjhocrxlhcehsthspv.supabase.co';
 		const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhvcmpob2NyeGxoY2Voc3Roc3B2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzNjMxMzgsImV4cCI6MjA5NzkzOTEzOH0.FeXNgxp3lJkEkgqE8XWF9McCgsVRRyPIahT8i0n9H4g';
 		const db = supabase.createClient(supabaseUrl, supabaseKey);
@@ -695,7 +700,7 @@
                     
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-sm font-medium text-slate-300 mb-1">類別</label>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">物品類別</label>
                             <select id="formItemCategory" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 text-slate-200">
                                 ${catOptions}
                             </select>
@@ -745,7 +750,7 @@
                     </div>
                 </form>
             `;
-            openModal(isEdit ? "✏️ 編輯物品資訊" : "➕ 新增物資品項", html);
+            openModal(isEdit ? "✏️ 編輯物品資訊" : "🔖 新增物資品項", html);
         }
 
         async function saveItem(event, itemId) {
@@ -855,29 +860,37 @@
             const locOptions = validLocs.map(l => `<option value="${l.name}" ${itemLocName === l.name ? 'selected' : ''}>${l.name}</option>`).join('');
             const validBoxes = state.boxes.filter(b => b.home === state.currentHome && b.room === itemRoom && b.location === itemLocName);
             let boxOptions = `<option value="">無容器 (不指定)</option>` + validBoxes.map(b => `<option value="${b.name}" ${itemBox === b.name ? 'selected' : ''}>${b.name}</option>`).join('');
+            
+            // 生成物品類別選單
+            const catOptions = state.categories.map(c => `<option value="${c.id}">${c.cat_name}</option>`).join('');
 
             const html = `
                 <form id="batchItemForm" onsubmit="saveBatchItems(event)" class="space-y-4 flex flex-col h-full max-h-[70vh]">
-                    <!-- 上方共用設定區 -->
-                    <div class="shrink-0 bg-slate-900/50 p-3 rounded-xl border border-slate-700 space-y-3">
-                         <!-- <div class="text-sm font-semibold text-emerald-400 mb-1 border-b border-slate-700 pb-2">共用存放設定</div> -->
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <!-- 上方共用設定區 (2*2 比例排列) -->
+                    <div class="shrink-0 bg-slate-900/50 px-3 py-2 rounded-xl border border-slate-700 space-y-2">
+                        <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <label class="block text-xs font-medium text-slate-400 mb-1">樓層房間</label>
-                                <select id="batchItemRoom" onchange="updateBatchModalLocationOptions()" required class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 text-slate-200">
+                                <label class="block text-sm font-medium text-slate-300 mb-1">樓層房間</label>
+                                <select id="batchItemRoom" onchange="updateBatchModalLocationOptions()" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
                                     ${roomOptions || '<option value="" disabled selected>請先自訂樓層</option>'}
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-xs font-medium text-slate-400 mb-1">存放位置</label>
-                                <select id="batchItemLocationName" onchange="updateBatchModalBoxOptions()" required class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 text-slate-200">
+                                <label class="block text-sm font-medium text-slate-300 mb-1">存放位置</label>
+                                <select id="batchItemLocationName" onchange="updateBatchModalBoxOptions()" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
                                     ${locOptions || '<option value="" disabled selected>該樓層無存放位置</option>'}
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-xs font-medium text-slate-400 mb-1">容器 (選填)</label>
-                                <select id="batchItemBoxName" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 text-slate-200" ${validBoxes.length === 0 ? 'disabled' : ''}>
+                                <label class="block text-sm font-medium text-slate-300 mb-1">容器 (選填)</label>
+                                <select id="batchItemBoxName" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500" ${validBoxes.length === 0 ? 'disabled' : ''}>
                                     ${boxOptions}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-300 mb-1">物品類別</label>
+                                <select id="batchItemCategory" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                                    ${catOptions || '<option value="" disabled selected>請先自訂類別</option>'}
                                 </select>
                             </div>
                         </div>
@@ -889,7 +902,7 @@
                             <label class="block text-sm font-medium text-slate-300">輸入物品明細 (免填有效期限/備註)</label>
                             <button type="button" onclick="addBatchRow()" class="text-sm bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded-lg transition shadow-md">+ 增加</button>
                         </div>
-                        <div id="batchRowsContainer" class="space-y-1 overflow-y-auto pr-2 pb-2 flex-1 max-h-[340px] overflow-y-scroll">
+                        <div id="batchRowsContainer" class="space-y-2 pr-2 pb-2 flex-1 max-h-[330px] overflow-y-scroll">
                             <!-- 存放動態產生的輸入列 -->
                         </div>
                     </div>
@@ -900,7 +913,7 @@
                     </div>
                 </form>
             `;
-            openModal("⊞ 批量新增物資品項", html);
+            openModal("🗂️ 批量新增物資品項", html);
             
             // 開啟時預設提供 3 行供輸入
             addBatchRow();
@@ -911,7 +924,7 @@
         window.addBatchRow = function() {
             const container = document.getElementById('batchRowsContainer');
             const row = document.createElement('div');
-            row.className = 'flex gap-2 items-center batch-item-row bg-slate-800 p-1 rounded-lg border border-slate-700/50';
+            row.className = 'flex gap-2 items-center batch-item-row bg-slate-800 px-2 py-0 rounded-lg border border-slate-700/50';
             row.innerHTML = `
                 <input type="text" placeholder="物品名稱 (必填)" required class="batch-item-name flex-1 bg-slate-900 border border-slate-600 rounded-md px-3 py-1 text-sm focus:outline-none focus:border-emerald-500 text-slate-100 min-w-0">
                 <input type="number" placeholder="數量" required min="1" value="1" class="batch-item-qty w-12 bg-slate-900 border border-slate-600 rounded-md pl-3 py-1 text-sm focus:outline-none focus:border-emerald-500 text-slate-100">
@@ -928,6 +941,10 @@
             const room = document.getElementById('batchItemRoom').value;
             const locName = document.getElementById('batchItemLocationName').value;
             const boxName = document.getElementById('batchItemBoxName').value || '';
+            
+            // 讀取批量新增指定的類別
+            const categorySelect = document.getElementById('batchItemCategory');
+            const category = categorySelect ? categorySelect.options[categorySelect.selectedIndex].text : '未分類';
 
             if (!room || !locName) {
                 alert("請確保已選擇存放位置");
@@ -936,8 +953,6 @@
 
             const rows = document.querySelectorAll('.batch-item-row');
             const newItems = [];
-            // 類別先預設為最上方第一個，或為「未分類」
-            const defaultCategory = state.categories.length > 0 ? state.categories[0].cat_name : '未分類';
             let baseId = Date.now();
 
             rows.forEach(row => {
@@ -949,7 +964,7 @@
                 if (name) {
                     newItems.push({
                         id: baseId++, // 利用遞增確保當前迴圈每筆 ID 獨立
-                        category: defaultCategory,
+                        category: category,
                         name: name,
                         quantity: quantity,
                         home: state.currentHome,
@@ -1009,7 +1024,8 @@
                 <div class="space-y-4">
                     <div class="flex gap-2">
                         <input type="text" id="newRoomInput" placeholder="例如：三樓、地下室" class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 text-slate-200">
-                        <button id="roomSubmitBtn" onclick="addOrUpdateRoom()" class="bg-blue-600 hover:bg-blue-500 text-white text-sm px-4 rounded-lg transition">新增</button>
+                        <button id="roomSubmitBtn" onclick="addOrUpdateRoom()" class="bg-blue-600 hover:bg-blue-500 text-white text-sm px-4 rounded-lg transition">
+						新增</button>
                     </div>
                     <div class="max-h-80 overflow-y-auto pr-2 overflow-x-hidden">
                         ${listHtml}
